@@ -4,6 +4,7 @@
 #include "PC_Player.h"
 #include "GM_TimeArena.h"
 #include "CHAR_Player.h"
+#include "CMC_Player.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -26,6 +27,7 @@ void APC_Player::ServerRequestSpawnCharacter_Implementation()
 		}
 	}
 }
+
 
 void APC_Player::BeginPlay()
 {
@@ -77,7 +79,12 @@ void APC_Player::SetupInputComponent()
 		{
 			EnhancedInputComponent->BindAction(RequestJumpAction, ETriggerEvent::Started, this, &APC_Player::RequestJump);
 		}
-}
+		if (RequestSprintAction)
+		{
+			EnhancedInputComponent->BindAction(RequestSprintAction, ETriggerEvent::Started, this, &APC_Player::RequestSprintStart);
+			EnhancedInputComponent->BindAction(RequestSprintAction, ETriggerEvent::Completed, this, &APC_Player::RequestSprintStop);
+		}
+	}
 }
 
 void APC_Player::CheckActiveCharacter()
@@ -85,6 +92,14 @@ void APC_Player::CheckActiveCharacter()
 	if (ActiveCharacter == nullptr) {
 	ActiveCharacter = Cast<ACHAR_Player>(GetCharacter());
 	}
+}
+
+UCMC_Player* APC_Player::GetCustomCharacterMovementComponent()
+{
+	ACHAR_Player* ActivePlayer = Cast<ACHAR_Player>(GetCharacter());
+	UCMC_Player* CMC = ActivePlayer->GetCMC_Player();
+	ensureMsgf(CMC != nullptr, TEXT("APC_Player::GetCustomCharacterMovementComponent - Getting Custom Character Movement Component returns nullptr"));
+	return CMC;
 }
 
 void APC_Player::RequestMove(const FInputActionValue& Value)
@@ -96,7 +111,7 @@ void APC_Player::RequestMove(const FInputActionValue& Value)
 	ActiveCharacter->AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::X), MovementVector.X);
 	ActiveCharacter->AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::Y), MovementVector.Y);
 
-	UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestMove - Executed"));
+	//UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestMove - Executed"));
 }
 
 void APC_Player::RequestLook(const FInputActionValue& Value)
@@ -106,14 +121,28 @@ void APC_Player::RequestLook(const FInputActionValue& Value)
 	ActiveCharacter->AddControllerYawInput(LookAxisVector.X);
 	ActiveCharacter->AddControllerPitchInput(-1.0f*LookAxisVector.Y);
 
-	UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestLook - Executed:"));
+	//UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestLook - Executed:"));
 }
 
 void APC_Player::RequestJump()
 {
 	CheckActiveCharacter();
-	UE_LOG(LogTemp, Warning, TEXT("APC_Network_Multiplayer::RequestJump Executed"));
+	//UE_LOG(LogTemp, Warning, TEXT("APC_Network_Multiplayer::RequestJump Executed"));
 	ActiveCharacter->Jump();
+}
+
+void APC_Player::RequestSprintStart()
+{
+	UCMC_Player* PlayerCustomMovementComponent = GetCustomCharacterMovementComponent();
+	PlayerCustomMovementComponent->SetSprinting(true);
+	UE_LOG(LogTemp, Warning, TEXT("Sprint Start"));
+}
+
+void APC_Player::RequestSprintStop()
+{
+	UCMC_Player* PlayerCustomMovementComponent = GetCustomCharacterMovementComponent();
+	PlayerCustomMovementComponent->SetSprinting(false);
+	UE_LOG(LogTemp, Warning, TEXT("Sprint Stop"));
 }
 
 

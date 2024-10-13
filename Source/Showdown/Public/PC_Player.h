@@ -12,6 +12,7 @@
 class AGM_TimeArena;
 class UInputAction;
 class UEnhancedInputLocalPlayerSubsystem;
+class UCMC_Player;
 
 
 UCLASS()
@@ -20,6 +21,7 @@ class SHOWDOWN_API APC_Player : public APlayerController
 	GENERATED_BODY()
 
 public:
+
 	//Request to spawn character - Server RPC
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void ServerRequestSpawnCharacter();
@@ -39,7 +41,7 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	void DelayedEIBinding();
 
-	//Enhanced Input Setup
+#pragma region Enhanced Input
 	virtual void SetupInputComponent() override;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")			//IMC
 	TObjectPtr<class UInputMappingContext> InputMappingContext = nullptr;
@@ -52,14 +54,23 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")		//Sprint
 	TObjectPtr<UInputAction> RequestSprintAction = nullptr;
 
+#pragma endregion
+
+#pragma region Getter and Checker Functions
 	//Checker function needed for PIE, used when switiching between windows.  ActiveCharacter becomes a nullptr when a window switch occurs. 
 	void CheckActiveCharacter();
+
+	//Getter function for custom character movement component. 
+	UCMC_Player* GetCustomCharacterMovementComponent();
+#pragma endregion
+
 	
 	//Movement Functions
 	void RequestMove(const FInputActionValue& Value);
 	void RequestLook(const FInputActionValue& Value);
 	void RequestJump();
-	//void RequestSprint();
+	void RequestSprintStart();
+	void RequestSprintStop();
 
 	//Movement UPROPERTIES
 	UPROPERTY(EditAnywhere, Category="Look")

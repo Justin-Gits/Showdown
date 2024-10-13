@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "CHAR_Player.generated.h"
 
+class UCMC_Player;
+
 UCLASS()
 class SHOWDOWN_API ACHAR_Player : public ACharacter
 {
@@ -13,7 +15,7 @@ class SHOWDOWN_API ACHAR_Player : public ACharacter
 
 public:
 	// Sets default values for this character's properties
-	ACHAR_Player();
+	ACHAR_Player(const class FObjectInitializer& ObjectInitializer);
 
 	//Network replication
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -28,5 +30,25 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	//Gets the custom character movement component - CMC_Player. 
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	UCMC_Player* GetCMC_Player() const;
+
+#pragma region Character Movement
+
+	void SprintStart();
+	void SprintStop();
+#pragma endregion
+
+#pragma region RPCs
+protected:
+UFUNCTION(Server, Reliable, WithValidation)
+void ServerHandleSprintStart(UCMC_Player* CMCReference);
+
+UFUNCTION(Server, Reliable)
+void ServerHandleSprintStop(UCMC_Player* CMCReference);
+
+#pragma endregion
 
 };
