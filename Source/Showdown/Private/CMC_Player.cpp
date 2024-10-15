@@ -134,7 +134,7 @@ uint8 FSavedMove_My::GetCompressedFlags() const
 	/*There are 4 custom move flags for us to use.  Below is what each is currently being used for:
 	FLAG_Custom_0		=0x10, // Sprinting
 	FLAG_Custom_1		=0x20, // Unused
-	FLAG_Custom_2		=0x40, // Ununsed
+	FLAG_Custom_2		=0x40, // Unused
 	FLAG_Custom_3		=0x80, // Unused
 	*/
 
@@ -142,7 +142,7 @@ uint8 FSavedMove_My::GetCompressedFlags() const
 	if (SavedWantsToSprint)
 		Result |= FLAG_Custom_0;
 
-	return uint8();
+	return Result;
 }
 
 bool FSavedMove_My::CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* Character, float MaxDelta) const
