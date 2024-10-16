@@ -37,8 +37,6 @@ void ACHAR_Player::BeginPlay()
 {
 	Super::BeginPlay();
 	NetUpdateFrequency = 120.0f;
-
-	
 }
 
 // Called every frame
@@ -67,6 +65,7 @@ void ACHAR_Player::OnHealthUpdate()
 	//Client Functionality
 	if (IsLocallyControlled())
 	{
+		SetHealthBarPercentage();
 		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
 
@@ -83,6 +82,17 @@ void ACHAR_Player::OnHealthUpdate()
 		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
 	}
+}
+
+float ACHAR_Player::GetCurrentHealthPercentage() const
+{
+	UE_LOG(LogTemp, Warning, TEXT("Current Health = %f, Max Health = %f."), CurrentHealth, MaxHealth);
+	return CurrentHealth/MaxHealth;
+}
+
+void ACHAR_Player::SetHealthBarPercentage_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("ACHAR_Player::SetHealthBarPercentage() - Default Implementation Occurred for this Blueprint Native Event."));
 }
 
 void ACHAR_Player::SetCurrentHealth(float healthValue)

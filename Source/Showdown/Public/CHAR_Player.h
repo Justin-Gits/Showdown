@@ -8,6 +8,7 @@
 
 class UCMC_Player;
 
+
 UCLASS()
 class SHOWDOWN_API ACHAR_Player : public ACharacter
 {
@@ -41,9 +42,9 @@ public:
 protected:
 	
 	//Properties
-	UPROPERTY(EditDefaultsOnly, Category ="Health")
+	UPROPERTY(EditDefaultsOnly, Category ="Health", BlueprintReadOnly)
 	float MaxHealth;
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth, BlueprintReadOnly)
 	float CurrentHealth;
 
 	//Client/Server Health Update functions
@@ -60,6 +61,14 @@ public:
 	//Getter Function for Current Health
 	UFUNCTION(BlueprintPure, Category="Health")
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
+
+	//Getter Function for Percentage of Health
+	UFUNCTION(BlueprintPure, Category="Health")
+	float GetCurrentHealthPercentage() const;
+
+	//BLUEPRINT NATIVE EVENT: Update Health Bar
+	UFUNCTION(BlueprintNativeEvent, Category = "Health")
+	void SetHealthBarPercentage();
 
 	//SERVER ONLY FUNCTION: Setter function for Current Health.  Clamps value between - and Max Health and calls OnHealthUpdate.
 	UFUNCTION(BlueprintCallable, Category="Health")
