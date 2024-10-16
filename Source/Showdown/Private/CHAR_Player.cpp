@@ -3,12 +3,18 @@
 
 #include "CHAR_Player.h"
 #include "CMC_Player.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/Engine.h"
 
 // Sets default values
 ACHAR_Player::ACHAR_Player(const class FObjectInitializer& ObjectInitializer):
 	Super(ObjectInitializer.SetDefaultSubobjectClass<UCMC_Player>(ACharacter::CharacterMovementComponentName))
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	//Default Character Properties
+	MaxHealth = 100.0f;
+	CurrentHealth = MaxHealth;
+	
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	//Network Replication
@@ -20,6 +26,10 @@ ACHAR_Player::ACHAR_Player(const class FObjectInitializer& ObjectInitializer):
 void ACHAR_Player::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//Replicated Properties
+	DOREPLIFETIME(ACHAR_Player, CurrentHealth);
+
 }
 
 // Called when the game starts or when spawned
@@ -50,45 +60,55 @@ UCMC_Player* ACHAR_Player::GetCMC_Player() const
 	return Cast<UCMC_Player>(GetCharacterMovement());
 }
 
-#pragma region Character Movement
-void ACHAR_Player::SprintStart()
+#pragma region Health
+
+void ACHAR_Player::OnHealthUpdate()
 {
-	UCMC_Player* CMC = GetCMC_Player();
-	CMC->SetSprinting(true);
-	if (!HasAuthority())
+	//Client Functionality
+	if (IsLocallyControlled())
 	{
-		ServerHandleSprintStart(CMC);
+		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+
+		if (CurrentHealth <= 0.0f)
+		{
+			FString deathMessage = FString::Printf(TEXT("You have perished."), CurrentHealth);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+		}
 	}
 
-}
-
-void ACHAR_Player::SprintStop()
-{
-	UCMC_Player* CMC = GetCMC_Player();
-	CMC->SetSprinting(false);
-	if (!HasAuthority())
+	//Server Functionality
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		ServerHandleSprintStop(CMC);
+		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
 	}
 }
+
+void ACHAR_Player::SetCurrentHealth(float healthValue)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
+		OnHealthUpdate();
+	}
+}
+
+float ACHAR_Player::TakeDamage(float DamageTaken, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float damageApplied = CurrentHealth - DamageTaken;
+	SetCurrentHealth(damageApplied);
+	return damageApplied;
+}
+
+
+void ACHAR_Player::OnRep_CurrentHealth()
+{
+	OnHealthUpdate();
+}
+
 #pragma endregion
 
-#pragma region RPCs
-void ACHAR_Player::ServerHandleSprintStart_Implementation(UCMC_Player* CMCReference)
-{
-	CMCReference->SetSprinting(true);
-}
 
-bool ACHAR_Player::ServerHandleSprintStart_Validate(UCMC_Player* CMCReference)
-{
-	// TODO:  Insert checks to prevent sprinting when there isn't enough energy
-	return true;
-}
 
-void ACHAR_Player::ServerHandleSprintStop_Implementation(UCMC_Player* CMCReference)
-{
-	CMCReference->SetSprinting(false);
-}
-
-#pragma endregion
 

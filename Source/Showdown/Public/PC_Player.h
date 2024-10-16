@@ -41,18 +41,20 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	void DelayedEIBinding();
 
-#pragma region Enhanced Input
+#pragma region Enhanced Input Bindings
 	virtual void SetupInputComponent() override;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")			//IMC
-	TObjectPtr<class UInputMappingContext> InputMappingContext = nullptr;
+		TObjectPtr<class UInputMappingContext> InputMappingContext = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")		//Move
-	TObjectPtr<UInputAction> RequestMoveAction = nullptr;
+		TObjectPtr<UInputAction> RequestMoveAction = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")		//Look
-	TObjectPtr<UInputAction> RequestLookAction = nullptr;
+		TObjectPtr<UInputAction> RequestLookAction = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")		//Jump
-	TObjectPtr<UInputAction> RequestJumpAction = nullptr;
+		TObjectPtr<UInputAction> RequestJumpAction = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")		//Sprint
-	TObjectPtr<UInputAction> RequestSprintAction = nullptr;
+		TObjectPtr<UInputAction> RequestSprintAction = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")		//Crouch
+		TObjectPtr<UInputAction> RequestToggleCrouchAction = nullptr;
 
 #pragma endregion
 
@@ -64,19 +66,25 @@ protected:
 	UCMC_Player* GetCustomCharacterMovementComponent();
 #pragma endregion
 
-	
+#pragma region Movement Functions and Properties
 	//Movement Functions
 	void RequestMove(const FInputActionValue& Value);
 	void RequestLook(const FInputActionValue& Value);
 	void RequestJump();
 	void RequestSprintStart();
 	void RequestSprintStop();
+	void RequestToggleCrouch();
 
 	//Movement UPROPERTIES
-	UPROPERTY(EditAnywhere, Category="Look")
+	UPROPERTY(EditAnywhere, Category = "Look")
 	float BaseLookUpRate = 90.0f;
-	UPROPERTY(EditAnywhere, Category="Look")
+	UPROPERTY(EditAnywhere, Category = "Look")
 	float BaseLookRightRate = 90.0f;
+
+#pragma endregion
+	
+
+	
 
 	//GameMode Declaration
 	AGM_TimeArena* GameModeRef;

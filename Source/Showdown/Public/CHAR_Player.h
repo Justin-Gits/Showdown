@@ -24,6 +24,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -35,19 +36,39 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	UCMC_Player* GetCMC_Player() const;
 
-#pragma region Character Movement
+#pragma region Character Health
 
-	void SprintStart();
-	void SprintStop();
-#pragma endregion
-
-#pragma region RPCs
 protected:
-UFUNCTION(Server, Reliable, WithValidation)
-void ServerHandleSprintStart(UCMC_Player* CMCReference);
+	
+	//Properties
+	UPROPERTY(EditDefaultsOnly, Category ="Health")
+	float MaxHealth;
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
+	float CurrentHealth;
 
-UFUNCTION(Server, Reliable)
-void ServerHandleSprintStop(UCMC_Player* CMCReference);
+	//Client/Server Health Update functions
+	UFUNCTION()						//RepNotify for changes made to current health. 
+	void OnRep_CurrentHealth();
+	UFUNCTION()
+	void OnHealthUpdate();		//Response to health being updated.  Called on the server immediately after modification, and on clients in response to receiving an update. 
+
+public:
+	//Getter Function for Max Health
+	UFUNCTION(BlueprintPure, Category="Health")
+	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
+
+	//Getter Function for Current Health
+	UFUNCTION(BlueprintPure, Category="Health")
+	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
+
+	//SERVER ONLY FUNCTION: Setter function for Current Health.  Clamps value between - and Max Health and calls OnHealthUpdate.
+	UFUNCTION(BlueprintCallable, Category="Health")
+	void SetCurrentHealth(float healthValue);
+
+	//Event for taking damage.  Overridden from APawn.
+	UFUNCTION(BlueprintCallable, Category="Health")
+	float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 
 #pragma endregion
 

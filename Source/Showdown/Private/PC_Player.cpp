@@ -84,6 +84,10 @@ void APC_Player::SetupInputComponent()
 			EnhancedInputComponent->BindAction(RequestSprintAction, ETriggerEvent::Started, this, &APC_Player::RequestSprintStart);
 			EnhancedInputComponent->BindAction(RequestSprintAction, ETriggerEvent::Completed, this, &APC_Player::RequestSprintStop);
 		}
+		if (RequestToggleCrouchAction)
+		{
+			EnhancedInputComponent->BindAction(RequestToggleCrouchAction, ETriggerEvent::Started, this, &APC_Player::RequestToggleCrouch);
+		}
 	}
 }
 
@@ -143,6 +147,19 @@ void APC_Player::RequestSprintStop()
 	UCMC_Player* PlayerCustomMovementComponent = GetCustomCharacterMovementComponent();
 	PlayerCustomMovementComponent->SetSprinting(false);
 	UE_LOG(LogTemp, Warning, TEXT("Sprint Stop"));
+}
+
+void APC_Player::RequestToggleCrouch()
+{
+	CheckActiveCharacter();	
+	if (ActiveCharacter->bIsCrouched)
+	{
+		ActiveCharacter->UnCrouch();
+	}
+	else
+	{
+		ActiveCharacter->Crouch();
+	}
 }
 
 
