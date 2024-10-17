@@ -5,6 +5,8 @@
 #include "PC_Player.h"
 #include "CMC_Player.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/EngineTypes.h"
+#include "GameFramework/DamageType.h"
 #include "Engine/Engine.h"
 
 // Sets default values
@@ -66,7 +68,8 @@ void ACHAR_Player::OnHealthUpdate()
 	//Client Functionality
 	if (IsLocallyControlled())
 	{
-		SetHealthBarPercentage();
+		APC_Player* ReferencePlayer = Cast<APC_Player>(GetController());
+		ReferencePlayer->SetHealthBarPercentage();
 		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
 
@@ -94,11 +97,6 @@ float ACHAR_Player::GetCurrentHealthPercentage() const
 	return CurrentHealthPercentage;
 }
 
-void ACHAR_Player::SetHealthBarPercentage_Implementation()
-{
-	UE_LOG(LogTemp, Warning, TEXT("ACHAR_Player::SetHealthBarPercentage() - Default Implementation Occurred for this Blueprint Native Event."));
-}
-
 void ACHAR_Player::SetCurrentHealth(float healthValue)
 {
 	if (GetLocalRole() == ROLE_Authority)
@@ -110,6 +108,7 @@ void ACHAR_Player::SetCurrentHealth(float healthValue)
 
 float ACHAR_Player::TakeDamage(float DamageTaken, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	// TODO:  The Super implementation is not here.  If i get more sophisticated with the way my damage is applied, then I may have to update this. 
 	float damageApplied = CurrentHealth - DamageTaken;
 	SetCurrentHealth(damageApplied);
 	return damageApplied;

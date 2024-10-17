@@ -6,14 +6,17 @@
 #include "CHAR_Player.h"
 #include "CMC_Player.h"
 #include "Engine/World.h"
+#include "Engine/EngineTypes.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/DamageType.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+
 
 void APC_Player::ServerRequestSpawnCharacter_Implementation()
 {
@@ -91,6 +94,10 @@ void APC_Player::SetupInputComponent()
 		if (RequestToggleCrouchAction)
 		{
 			EnhancedInputComponent->BindAction(RequestToggleCrouchAction, ETriggerEvent::Started, this, &APC_Player::RequestToggleCrouch);
+		}
+		if (RequestDamageSelfAction)
+		{
+			EnhancedInputComponent->BindAction(RequestDamageSelfAction, ETriggerEvent::Started, this, &APC_Player::RequestDamageSelf);
 		}
 	}
 }
@@ -174,6 +181,26 @@ void APC_Player::RequestToggleCrouch()
 	}
 }
 
+void APC_Player::RequestDamageSelf()							// TODO:  Should remove this debug functionality prior to game release. 
+{
+	ACHAR_Player* TargetCharacter = GetActiveCharacter();
+	float DamageAmount = 10.0f;
+	APC_Player* InstigatingPlayer = this;
+//	UGameplayStatics::ApplyDamage(TargetCharacter, DamageAmount, this, TargetCharacter, UDamageType::StaticClass());
+	if (HasAuthority())
+	{
+		UGameplayStatics::ApplyDamage(TargetCharacter, DamageAmount, this, TargetCharacter, UDamageType::StaticClass());
+	}
+	else
+	{
+		ServerDamageSelf(TargetCharacter, DamageAmount, InstigatingPlayer);				
+	}
+	
+}
+
+
+#pragma region HUD
+
 void APC_Player::ClientConstructHUDWidget_Implementation()
 {
 	ensureMsgf(IsLocalController() == true, TEXT("APC_Player::ClientConstructHUDWidget_Implementation() - Still isn't a local player controller..."));
@@ -183,11 +210,25 @@ void APC_Player::ClientConstructHUDWidget_Implementation()
 	}
 }
 
-#pragma region HUD
+
 void APC_Player::ConstructHUDWidget_Implementation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ConstructHUDWidget_Implementation() - Default Implementation Occurred for this Blueprint Native Event."));
 }
+
+void APC_Player::SetHealthBarPercentage_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("APC_Player::SetHealthBarPercentage_Implementation() - Default Implementation Occurred for this Blueprint Native Event."));
+}
+
+#pragma endregion
+
+#pragma region RPCs
+void APC_Player::ServerDamageSelf_Implementation(ACHAR_Player* TargetCharacter, float DamageAmount, APC_Player* InstigatingPlayer)
+{
+	UGameplayStatics::ApplyDamage(TargetCharacter, DamageAmount, this, TargetCharacter, UDamageType::StaticClass());
+}
+
 
 #pragma endregion
 

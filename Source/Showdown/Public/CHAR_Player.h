@@ -8,6 +8,7 @@
 
 class UCMC_Player;
 class APC_Player;
+struct FDamageEvent;
 
 
 UCLASS()
@@ -67,18 +68,13 @@ public:
 	UFUNCTION(BlueprintPure, Category="Health")
 	float GetCurrentHealthPercentage() const;
 	
-	//BLUEPRINT NATIVE EVENT: Update Health Bar
-	UFUNCTION(BlueprintNativeEvent, Category = "Health")
-	void SetHealthBarPercentage();
-
 	//SERVER ONLY FUNCTION: Setter function for Current Health.  Clamps value between - and Max Health and calls OnHealthUpdate.
 	UFUNCTION(BlueprintCallable, Category="Health")
 	void SetCurrentHealth(float healthValue);
 
 	//Event for taking damage.  Overridden from APawn.
-	UFUNCTION(BlueprintCallable, Category="Health")
+	UFUNCTION(BlueprintCallable, Category = "Health")
 	float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-
 
 #pragma endregion
 
