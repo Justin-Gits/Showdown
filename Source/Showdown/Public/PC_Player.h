@@ -62,6 +62,10 @@ protected:
 	//Checker function needed for PIE, used when switiching between windows.  ActiveCharacter becomes a nullptr when a window switch occurs. 
 	void CheckActiveCharacter();
 
+	//Getter function - Active Character
+	UFUNCTION(BlueprintCallable, Category="PC_Player")
+	ACHAR_Player* GetActiveCharacter();
+
 	//Getter function for custom character movement component. 
 	UCMC_Player* GetCustomCharacterMovementComponent();
 #pragma endregion
@@ -83,7 +87,15 @@ protected:
 
 #pragma endregion
 	
+#pragma region HUD
 
+	UFUNCTION(Client, Reliable)
+	void ClientConstructHUDWidget();
+	
+	UFUNCTION(BlueprintNativeEvent, Category="HUD")
+	void ConstructHUDWidget();
+
+#pragma endregion
 	
 
 	//GameMode Declaration

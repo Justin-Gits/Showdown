@@ -7,6 +7,7 @@
 #include "CHAR_Player.generated.h"
 
 class UCMC_Player;
+class APC_Player;
 
 
 UCLASS()
@@ -65,7 +66,7 @@ public:
 	//Getter Function for Percentage of Health
 	UFUNCTION(BlueprintPure, Category="Health")
 	float GetCurrentHealthPercentage() const;
-
+	
 	//BLUEPRINT NATIVE EVENT: Update Health Bar
 	UFUNCTION(BlueprintNativeEvent, Category = "Health")
 	void SetHealthBarPercentage();

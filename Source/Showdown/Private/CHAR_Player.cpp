@@ -2,6 +2,7 @@
 
 
 #include "CHAR_Player.h"
+#include "PC_Player.h"
 #include "CMC_Player.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
@@ -12,7 +13,7 @@ ACHAR_Player::ACHAR_Player(const class FObjectInitializer& ObjectInitializer):
 {
  	//Default Character Properties
 	MaxHealth = 100.0f;
-	CurrentHealth = MaxHealth;
+	CurrentHealth = MaxHealth-20.0f;
 	
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -84,10 +85,13 @@ void ACHAR_Player::OnHealthUpdate()
 	}
 }
 
+
+
 float ACHAR_Player::GetCurrentHealthPercentage() const
 {
-	UE_LOG(LogTemp, Warning, TEXT("Current Health = %f, Max Health = %f."), CurrentHealth, MaxHealth);
-	return CurrentHealth/MaxHealth;
+	float CurrentHealthPercentage = CurrentHealth / MaxHealth;
+	//UE_LOG(LogTemp, Warning, TEXT("Current Health Percentage = %f"), CurrentHealthPercentage);
+	return CurrentHealthPercentage;
 }
 
 void ACHAR_Player::SetHealthBarPercentage_Implementation()

@@ -46,6 +46,10 @@ void APC_Player::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 	ActiveCharacter = Cast<ACHAR_Player>(InPawn);
 	ensureMsgf(ActiveCharacter != nullptr, TEXT("APC_Player::OnPossess - Active Character = nullptr"));
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		ClientConstructHUDWidget();
+	}
 }
 
 void APC_Player::DelayedEIBinding()
@@ -96,6 +100,14 @@ void APC_Player::CheckActiveCharacter()
 	if (ActiveCharacter == nullptr) {
 	ActiveCharacter = Cast<ACHAR_Player>(GetCharacter());
 	}
+}
+
+ACHAR_Player* APC_Player::GetActiveCharacter()
+{
+	if (ActiveCharacter == nullptr) {
+		ActiveCharacter = Cast<ACHAR_Player>(GetCharacter());
+	}
+	return ActiveCharacter;
 }
 
 UCMC_Player* APC_Player::GetCustomCharacterMovementComponent()
@@ -161,6 +173,23 @@ void APC_Player::RequestToggleCrouch()
 		ActiveCharacter->Crouch();
 	}
 }
+
+void APC_Player::ClientConstructHUDWidget_Implementation()
+{
+	ensureMsgf(IsLocalController() == true, TEXT("APC_Player::ClientConstructHUDWidget_Implementation() - Still isn't a local player controller..."));
+	if (IsLocalController())
+	{
+		ConstructHUDWidget();
+	}
+}
+
+#pragma region HUD
+void APC_Player::ConstructHUDWidget_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ConstructHUDWidget_Implementation() - Default Implementation Occurred for this Blueprint Native Event."));
+}
+
+#pragma endregion
 
 
 
