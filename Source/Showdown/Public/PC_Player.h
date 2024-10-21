@@ -56,6 +56,8 @@ protected:
 		TObjectPtr<UInputAction> RequestToggleCrouchAction = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")		//DamageSelf
 		TObjectPtr<UInputAction> RequestDamageSelfAction = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enhanced Input")		//FireWeapon
+		TObjectPtr<UInputAction> RequestFireWeaponAction = nullptr;
 
 public:
 #pragma endregion
@@ -74,7 +76,7 @@ public:
 
 #pragma region Movement Functions and Properties
 protected:
-	//Movement Functions
+	//Movement and Action Functions
 	void RequestMove(const FInputActionValue& Value);
 	void RequestLook(const FInputActionValue& Value);
 	void RequestJump();
@@ -82,6 +84,7 @@ protected:
 	void RequestSprintStop();
 	void RequestToggleCrouch();
 	void RequestDamageSelf();
+	void RequestFireWeapon();
 
 	//Movement UPROPERTIES
 	UPROPERTY(EditAnywhere, Category = "Look")

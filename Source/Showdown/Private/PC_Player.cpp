@@ -99,6 +99,10 @@ void APC_Player::SetupInputComponent()
 		{
 			EnhancedInputComponent->BindAction(RequestDamageSelfAction, ETriggerEvent::Started, this, &APC_Player::RequestDamageSelf);
 		}
+		if (RequestFireWeaponAction)
+		{
+			EnhancedInputComponent->BindAction(RequestFireWeaponAction, ETriggerEvent::Started, this, &APC_Player::RequestFireWeapon);
+		}
 	}
 }
 
@@ -124,6 +128,8 @@ UCMC_Player* APC_Player::GetCustomCharacterMovementComponent()
 	ensureMsgf(CMC != nullptr, TEXT("APC_Player::GetCustomCharacterMovementComponent - Getting Custom Character Movement Component returns nullptr"));
 	return CMC;
 }
+
+#pragma region Character Movement and Actions
 
 void APC_Player::RequestMove(const FInputActionValue& Value)
 {
@@ -198,6 +204,13 @@ void APC_Player::RequestDamageSelf()							// TODO:  Should remove this debug fu
 	
 }
 
+void APC_Player::RequestFireWeapon()
+{
+	CheckActiveCharacter();
+	ActiveCharacter->RequestFireWeapon();
+}
+
+#pragma endregion
 
 #pragma region HUD
 

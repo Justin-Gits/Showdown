@@ -4,6 +4,7 @@
 #include "CHAR_Player.h"
 #include "PC_Player.h"
 #include "CMC_Player.h"
+#include "SMC_BaseWeapon.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/EngineTypes.h"
 #include "GameFramework/DamageType.h"
@@ -114,7 +115,6 @@ float ACHAR_Player::TakeDamage(float DamageTaken, FDamageEvent const& DamageEven
 	return damageApplied;
 }
 
-
 void ACHAR_Player::OnRep_CurrentHealth()
 {
 	OnHealthUpdate();
@@ -122,6 +122,32 @@ void ACHAR_Player::OnRep_CurrentHealth()
 
 #pragma endregion
 
+
+#pragma region Weapon Firing Mechanics
+
+void ACHAR_Player::RequestFireWeapon()
+{
+	//FString requestFireWeapon = FString::Printf(TEXT("CHAR_Player::RequestFireWeapon() - CHARACTER BANG!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, requestFireWeapon);
+	CheckIfWeaponEquipped();
+}
+
+void ACHAR_Player::CheckIfWeaponEquipped()
+{
+	USMC_BaseWeapon* EquippedWeaponSMC = FindComponentByClass<USMC_BaseWeapon>();
+	if (EquippedWeaponSMC)
+	{
+		FString weaponEquipped = FString::Printf(TEXT("CHAR_Player::CheckIfWeaponEquipped() - You have a weapon, BANG!"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, weaponEquipped);
+	}
+	else
+	{
+		FString noWeaponEquipped = FString::Printf(TEXT("CHAR_Player::CheckIfWeaponEquipped() - STOP - No Weapon Equipped!"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, noWeaponEquipped);
+	}
+}
+
+#pragma endregion
 
 
 

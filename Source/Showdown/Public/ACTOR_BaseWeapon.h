@@ -8,7 +8,30 @@
 
 //Weapon Stats Struct
 
+USTRUCT(BlueprintType)
+struct FWeaponStats
+{
+	GENERATED_BODY()
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float Damage;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float BulletSpeed;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float FireType;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float FireRate;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float ReloadTime;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float MagazineCapacity;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float AimTime;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float Recoil;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float BulletSpread;
+};
 
 UCLASS()
 class SHOWDOWN_API AACTOR_BaseWeapon : public AActor
@@ -28,9 +51,4 @@ public:
 	virtual void Tick(float DeltaTime) override;
 #pragma endregion
 
-
-
-#pragma region Setter Getter Functions
-
-#pragma endregion
 };

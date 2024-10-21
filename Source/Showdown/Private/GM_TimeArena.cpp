@@ -3,6 +3,7 @@
 
 #include "GM_TimeArena.h"
 #include "PC_Player.h"
+#include "ENUM_TimeArena.h"
 
 
 void AGM_TimeArena::SpawnCharacterForPlayer_Implementation(APC_Player* PlayerController)
