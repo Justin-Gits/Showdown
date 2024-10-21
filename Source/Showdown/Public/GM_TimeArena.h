@@ -6,9 +6,31 @@
 #include "GameFramework/GameMode.h"
 #include "GM_TimeArena.generated.h"
 
-/**
- * 
- */
+USTRUCT(BlueprintType)
+struct FWeaponStats
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float Damage;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float BulletSpeed;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float FireType;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float FireRate;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float ReloadTime;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float MagazineCapacity;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float AimTime;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float Recoil;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float BulletSpread;
+};
+
 UCLASS()
 class SHOWDOWN_API AGM_TimeArena : public AGameMode
 {

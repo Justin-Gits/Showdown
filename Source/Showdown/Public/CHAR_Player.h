@@ -78,4 +78,16 @@ public:
 
 #pragma endregion
 
+#pragma region Weapon Firing Mechanics
+protected:
+	bool bWeaponAvailable;
+
+
+
+public:
+
+
+#pragma endregion
+
+
 };
