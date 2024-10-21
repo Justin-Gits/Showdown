@@ -137,8 +137,9 @@ void ACHAR_Player::CheckIfWeaponEquipped()
 	USMC_BaseWeapon* EquippedWeaponSMC = FindComponentByClass<USMC_BaseWeapon>();
 	if (EquippedWeaponSMC)
 	{
-		FString weaponEquipped = FString::Printf(TEXT("CHAR_Player::CheckIfWeaponEquipped() - You have a weapon, BANG!"));
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, weaponEquipped);
+		//FString weaponEquipped = FString::Printf(TEXT("CHAR_Player::CheckIfWeaponEquipped() - You have a weapon, BANG!"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, weaponEquipped);
+		EquippedWeaponSMC->FireWeapon();
 	}
 	else
 	{
