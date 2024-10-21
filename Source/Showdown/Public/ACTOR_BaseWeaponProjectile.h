@@ -6,21 +6,45 @@
 #include "GameFramework/Actor.h"
 #include "ACTOR_BaseWeaponProjectile.generated.h"
 
+class USphereComponent;
+class UProjectileMovementComponent;
+
 UCLASS()
 class SHOWDOWN_API AACTOR_BaseWeaponProjectile : public AActor
 {
 	GENERATED_BODY()
+
+private:
+	//Sphere Collision Component
+	UPROPERTY(VisibleAnywhere, Category=Projectile)
+	USphereComponent* BulletCollisionComponent;
+
+	//Projectile Movement Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UProjectileMovementComponent * BulletProjectileMovement;
 	
-public:	
-	// Sets default values for this actor's properties
+#pragma region Defaults
+public:
 	AACTOR_BaseWeaponProjectile();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+#pragma endregion
+
+#pragma region Setter and Getter Functions
+public:
+	USphereComponent* GetBulletCollisionComponent() const {	return BulletCollisionComponent;}
+	UProjectileMovementComponent* GetBulletProjectileMovement() const {	return BulletProjectileMovement;}
+
+#pragma endregion
+
+#pragma region Collision Functions
+	//Called when the projectile hits something
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+#pragma endregion
+
 
 };
