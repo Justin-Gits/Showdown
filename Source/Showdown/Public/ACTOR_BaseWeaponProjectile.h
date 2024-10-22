@@ -32,6 +32,12 @@ protected:
 
 #pragma endregion
 
+#pragma region Properties
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Projectile")
+	UStaticMeshComponent* BulletProjectileMesh;
+
+#pragma endregion
+
 #pragma region Setter and Getter Functions
 public:
 	USphereComponent* GetBulletCollisionComponent() const {	return BulletCollisionComponent;}

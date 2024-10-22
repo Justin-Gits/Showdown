@@ -32,11 +32,14 @@ public:
 
 	//Spawns a bullet projectile
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void FireWeapon();
+	void FireWeapon(ACHAR_Player* RequestingCharacter);
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float Damage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
+	FVector MuzzleOffset;
 #pragma endregion
 
 

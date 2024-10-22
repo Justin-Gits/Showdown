@@ -4,6 +4,7 @@
 #include "ACTOR_BaseWeaponProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "CHAR_Player.h"
 #include "Engine/Engine.h"
 
@@ -13,6 +14,7 @@
 
 AACTOR_BaseWeaponProjectile::AACTOR_BaseWeaponProjectile()
 {
+	
 	//Generates a sphere as a collision representation
 	BulletCollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("BulletSphereComp"));
 	BulletCollisionComponent->InitSphereRadius(5.0f);
@@ -26,6 +28,15 @@ AACTOR_BaseWeaponProjectile::AACTOR_BaseWeaponProjectile()
 	//Sets collision component as root component
 	RootComponent = BulletCollisionComponent;
 
+	//	//Generate a simple static mesh for the projectile
+	BulletProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BulletProjectileMesh"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+	if (MeshAsset.Succeeded())
+	{
+		BulletProjectileMesh->SetStaticMesh(MeshAsset.Object);
+	}
+	BulletProjectileMesh->SetupAttachment(RootComponent);
+
 	//Sets BulletProjectileMovementComponent to govern this projectile's movement
 	BulletProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("BulletProjectileComp"));
 	BulletProjectileMovement->UpdatedComponent = BulletCollisionComponent;
@@ -35,7 +46,7 @@ AACTOR_BaseWeaponProjectile::AACTOR_BaseWeaponProjectile()
 	BulletProjectileMovement->bShouldBounce = false;
 
 	//Sets default despawn timer
-	InitialLifeSpan = 1.5f;
+	InitialLifeSpan = 10.0f;
 
 }
 
