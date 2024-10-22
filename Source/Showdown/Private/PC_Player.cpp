@@ -146,6 +146,10 @@ void APC_Player::RequestMove(const FInputActionValue& Value)
 void APC_Player::RequestLook(const FInputActionValue& Value)
 {
 	CheckActiveCharacter();
+	if (ActiveCharacter == nullptr)
+	{
+		return;
+	}
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 	ActiveCharacter->AddControllerYawInput(LookAxisVector.X);
 	ActiveCharacter->AddControllerPitchInput(-1.0f*LookAxisVector.Y);
