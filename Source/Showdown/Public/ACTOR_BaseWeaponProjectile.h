@@ -27,6 +27,9 @@ private:
 public:
 	AACTOR_BaseWeaponProjectile();
 
+	//Network replication
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	virtual void BeginPlay() override;
 

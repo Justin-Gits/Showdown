@@ -1,12 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+//Custom Classes
 #include "ACTOR_BaseWeaponProjectile.h"
+#include "CHAR_Player.h"
+//Engine Functionality
+#include "Engine/Engine.h"
+//Projectile sphere
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "CHAR_Player.h"
-#include "Engine/Engine.h"
+//Networking
+#include "Net/UnrealNetwork.h"
+
 
 
 //Note - Defaults (Constructor) contains a lot of the collision/projectile movement properties. 
@@ -47,6 +52,19 @@ AACTOR_BaseWeaponProjectile::AACTOR_BaseWeaponProjectile()
 
 	//Sets default despawn timer
 	InitialLifeSpan = 10.0f;
+
+	//Network Replication
+	bReplicates = true;
+	SetReplicateMovement(true);									// TODO:  A potential room for improvement is to have the client spawn the balls on their end first, to prevent the latency from sending command to server. 
+
+}
+
+void AACTOR_BaseWeaponProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//Replicated Properties
+	//Currently none. 
 
 }
 

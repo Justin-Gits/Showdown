@@ -7,6 +7,7 @@
 #include "CHAR_Player.h"
 #include "ACTOR_BaseWeaponProjectile.h"
 
+
 #pragma region Defaults
 
 USMC_BaseWeapon::USMC_BaseWeapon()
