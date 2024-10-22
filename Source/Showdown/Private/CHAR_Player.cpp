@@ -139,7 +139,7 @@ void ACHAR_Player::CheckIfWeaponEquipped()
 	{
 		//FString weaponEquipped = FString::Printf(TEXT("CHAR_Player::CheckIfWeaponEquipped() - You have a weapon, BANG!"));
 		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, weaponEquipped);
-		EquippedWeaponSMC->FireWeapon(this);
+		EquippedWeaponSMC->NetworkRequestFireWeapon(this);
 	}
 	else
 	{

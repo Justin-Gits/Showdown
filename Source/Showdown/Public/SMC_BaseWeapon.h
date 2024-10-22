@@ -30,8 +30,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category=Projectile)
 	TSubclassOf<AACTOR_BaseWeaponProjectile> BulletProjectileClass;
 
-	//Spawns a bullet projectile
+	//Checks authority on player requesting to fire the weapon
 	UFUNCTION(BlueprintCallable, Category="Weapon")
+	void NetworkRequestFireWeapon(ACHAR_Player* RequestingCharacter);
+
+	//Logic to fire the weapon
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void FireWeapon(ACHAR_Player* RequestingCharacter);
 
 protected:
@@ -47,6 +51,15 @@ protected:
 protected:
 	ACHAR_Player* CharacterSelf;
 	APC_Player* ControllerSelf;
+
+#pragma endregion
+
+
+#pragma region RPCs
+protected:
+	UFUNCTION(Server, Reliable)
+	void ServerSpawnBulletProjectile(ACHAR_Player* RequestingCharacter);
+
 
 #pragma endregion
 };

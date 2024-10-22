@@ -12,19 +12,32 @@
 USMC_BaseWeapon::USMC_BaseWeapon()
 {
 	Damage = 10.0f;
-	MuzzleOffset = FVector(400.0f, 0.0f, 10.0f);
+	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
 
 #pragma endregion
 
 #pragma region Projectile Functions
 
-void USMC_BaseWeapon::FireWeapon(ACHAR_Player* RequestingPlayer)
+void USMC_BaseWeapon::NetworkRequestFireWeapon(ACHAR_Player* RequestingCharacter)
+{
+	if (GetOwner()->HasAuthority())
+	{
+		FireWeapon(RequestingCharacter);
+	}
+	else
+	{
+		ServerSpawnBulletProjectile(RequestingCharacter);
+	}
+	
+
+}
+void USMC_BaseWeapon::FireWeapon(ACHAR_Player* RequestingCharacter)
 {
 	FString fireWeapon = FString::Printf(TEXT("SMC_BaseWeapon::FireWeapon() - Weapon Component Fired Weapon!"));
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, fireWeapon);
 
-	if (RequestingPlayer == nullptr)
+	if (RequestingCharacter == nullptr)
 	{
 		FString invalidCharRef = FString::Printf(TEXT("SMC_BaseWeapon::FireWeapon() - invalid Character Reference"));
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, invalidCharRef);
@@ -38,7 +51,7 @@ void USMC_BaseWeapon::FireWeapon(ACHAR_Player* RequestingPlayer)
 		if (World != nullptr)
 		{
 			//Get Player Controller to reference a projectile spawn point.
-			CharacterSelf = RequestingPlayer;
+			CharacterSelf = RequestingCharacter;
 			ControllerSelf = Cast<APC_Player>(CharacterSelf->GetController());
 			const FRotator BulletProjectileSpawnRotation = ControllerSelf->PlayerCameraManager->GetCameraRotation();
 			const FVector BulletProjectileSpawnLocation = CharacterSelf->GetActorLocation() + BulletProjectileSpawnRotation.RotateVector(MuzzleOffset);
@@ -52,10 +65,22 @@ void USMC_BaseWeapon::FireWeapon(ACHAR_Player* RequestingPlayer)
 
 			//Spawn the Bullet Projectile
 			World->SpawnActor<AACTOR_BaseWeaponProjectile>(BulletProjectileClass, BulletProjectileSpawnLocation, BulletProjectileSpawnRotation, BulletProjectileSpawnParameters);
-			UE_LOG(LogTemp, Warning, TEXT("Actor location is: X= %f, Y=%f, Z=%f"),BulletProjectileSpawnLocation.X, BulletProjectileSpawnLocation.Y, BulletProjectileSpawnLocation.Z)
+			UE_LOG(LogTemp, Warning, TEXT("Actor location is: X= %f, Y=%f, Z=%f"), BulletProjectileSpawnLocation.X, BulletProjectileSpawnLocation.Y, BulletProjectileSpawnLocation.Z)
 
 		}
 	}
+
+}
+#pragma endregion
+
+#pragma region RPCs
+void USMC_BaseWeapon::ServerSpawnBulletProjectile_Implementation(ACHAR_Player* RequestingCharacter)
+{
+	FString fireWeapon = FString::Printf(TEXT("USMC_BaseWeapon::ServerSpawnBulletProjectile_Implementation() - Spawning a Bullet on the server"));
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, fireWeapon);
+	FireWeapon(RequestingCharacter);
 }
 
+
 #pragma endregion
+
