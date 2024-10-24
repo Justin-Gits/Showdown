@@ -134,6 +134,10 @@ UCMC_Player* APC_Player::GetCustomCharacterMovementComponent()
 void APC_Player::RequestMove(const FInputActionValue& Value)
 {
 	CheckActiveCharacter();
+	if (ActiveCharacter == nullptr)
+	{
+		return;
+	}
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	FRotator const ControlSpaceRot = GetControlRotation();

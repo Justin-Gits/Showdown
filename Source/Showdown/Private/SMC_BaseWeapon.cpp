@@ -36,8 +36,8 @@ void USMC_BaseWeapon::NetworkRequestFireWeapon(ACHAR_Player* RequestingCharacter
 }
 void USMC_BaseWeapon::FireWeapon(ACHAR_Player* RequestingCharacter)
 {
-	FString fireWeapon = FString::Printf(TEXT("SMC_BaseWeapon::FireWeapon() - Weapon Component Fired Weapon!"));
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, fireWeapon);
+	//FString fireWeapon = FString::Printf(TEXT("SMC_BaseWeapon::FireWeapon() - Weapon Component Fired Weapon!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, fireWeapon);
 
 	if (RequestingCharacter == nullptr)
 	{
@@ -79,8 +79,8 @@ void USMC_BaseWeapon::FireWeapon(ACHAR_Player* RequestingCharacter)
 #pragma region RPCs
 void USMC_BaseWeapon::ServerSpawnBulletProjectile_Implementation(ACHAR_Player* RequestingCharacter)
 {
-	FString fireWeapon = FString::Printf(TEXT("USMC_BaseWeapon::ServerSpawnBulletProjectile_Implementation() - Spawning a Bullet on the server"));
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, fireWeapon);
+	//FString fireWeapon = FString::Printf(TEXT("USMC_BaseWeapon::ServerSpawnBulletProjectile_Implementation() - Spawning a Bullet on the server"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, fireWeapon);
 	FireWeapon(RequestingCharacter);
 }
 

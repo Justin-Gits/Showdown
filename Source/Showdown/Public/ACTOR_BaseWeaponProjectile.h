@@ -36,8 +36,12 @@ protected:
 #pragma endregion
 
 #pragma region Properties
+protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Projectile")
 	UStaticMeshComponent* BulletProjectileMesh;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Projectile")
+	//float BulletProjectileRadius;
 
 #pragma endregion
 
@@ -49,6 +53,8 @@ public:
 #pragma endregion
 
 #pragma region Collision Functions
+public:
+	
 	//Called when the projectile hits something
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
