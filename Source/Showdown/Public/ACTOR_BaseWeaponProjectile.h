@@ -55,5 +55,9 @@ public:
 
 #pragma endregion
 
+#pragma region Networking
 
+	bool IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const override;
+
+#pragma endregion
 };

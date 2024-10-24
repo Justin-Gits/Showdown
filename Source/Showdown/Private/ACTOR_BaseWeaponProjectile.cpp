@@ -3,6 +3,7 @@
 //Custom Classes
 #include "ACTOR_BaseWeaponProjectile.h"
 #include "CHAR_Player.h"
+#include "PC_Player.h"
 //Engine Functionality
 #include "Engine/Engine.h"
 //Projectile sphere
@@ -62,7 +63,7 @@ AACTOR_BaseWeaponProjectile::AACTOR_BaseWeaponProjectile()
 void AACTOR_BaseWeaponProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
+	//DOREPLIFETIME_CONDITION(AACTOR_BaseWeaponProjectile, bReplicates, COND_SkipOwner);
 	//Replicated Properties
 	//Currently none. 
 
@@ -94,6 +95,23 @@ void AACTOR_BaseWeaponProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Ot
 		FString hitNothing = FString::Printf(TEXT("ACTOR_BaseWeaponProjectile::OnHit - Hit Nothing"));
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, hitNothing);
 		Destroy();
+	}
+}
+
+bool AACTOR_BaseWeaponProjectile::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
+{
+	//Purpose: Ensures that the projectile is not replicated for the actor who fired it.  Otherwise, two projectiles would be shown on their screen. 
+	AController* InstigatorController = GetInstigatorController();
+
+	UE_LOG(LogTemp, Warning, TEXT("Instigator: %s"), *InstigatorController->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("RealViewer: %s"), *RealViewer->GetName());
+	if (InstigatorController == RealViewer)
+	{
+		return false;
+	}
+	else
+	{
+		return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
 	}
 }
 

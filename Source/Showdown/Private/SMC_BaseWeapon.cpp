@@ -29,6 +29,7 @@ void USMC_BaseWeapon::NetworkRequestFireWeapon(ACHAR_Player* RequestingCharacter
 	else
 	{
 		ServerSpawnBulletProjectile(RequestingCharacter);
+		FireWeapon(RequestingCharacter);
 	}
 	
 
@@ -65,8 +66,9 @@ void USMC_BaseWeapon::FireWeapon(ACHAR_Player* RequestingCharacter)
 			BulletProjectileSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 			//Spawn the Bullet Projectile
-			World->SpawnActor<AACTOR_BaseWeaponProjectile>(BulletProjectileClass, BulletProjectileSpawnLocation, BulletProjectileSpawnRotation, BulletProjectileSpawnParameters);
-			UE_LOG(LogTemp, Warning, TEXT("Actor location is: X= %f, Y=%f, Z=%f"), BulletProjectileSpawnLocation.X, BulletProjectileSpawnLocation.Y, BulletProjectileSpawnLocation.Z)
+			AACTOR_BaseWeaponProjectile* BulletProjectile=World->SpawnActor<AACTOR_BaseWeaponProjectile>(BulletProjectileClass, BulletProjectileSpawnLocation, BulletProjectileSpawnRotation, BulletProjectileSpawnParameters);
+			BulletProjectile->SetInstigator(CharacterSelf);
+
 
 		}
 	}
