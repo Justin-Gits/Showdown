@@ -37,11 +37,11 @@ protected:
 
 #pragma region Properties
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Projectile")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Custom - Projectile")
 	UStaticMeshComponent* BulletProjectileMesh;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Projectile")
-	//float BulletProjectileRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Custom - Projectile")
+	float BulletProjectileDamage;
 
 #pragma endregion
 
@@ -59,7 +59,11 @@ public:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	//APC_Player* AttackingPlayerController;
+	//ACHAR_Player* AttackingCharacter;
+
 #pragma endregion
+
 
 #pragma region Networking
 

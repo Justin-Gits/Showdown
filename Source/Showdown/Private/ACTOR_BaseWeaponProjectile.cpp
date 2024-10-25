@@ -6,6 +6,7 @@
 #include "PC_Player.h"
 //Engine Functionality
 #include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
 //Projectile sphere
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
@@ -24,11 +25,12 @@ AACTOR_BaseWeaponProjectile::AACTOR_BaseWeaponProjectile()
 	//Generates a sphere as a collision representation
 	BulletCollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("BulletSphereComp"));
 	//BulletCollisionComponent->InitSphereRadius(BulletProjectileMeshRadius);
-	BulletCollisionComponent->BodyInstance.SetCollisionProfileName("Projectile");
+	BulletCollisionComponent->SetCollisionProfileName("Destructible");
+	BulletCollisionComponent->SetNotifyRigidBodyCollision(true);
 	BulletCollisionComponent->OnComponentHit.AddDynamic(this, &AACTOR_BaseWeaponProjectile::OnHit);
 	BulletCollisionComponent->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	BulletCollisionComponent->CanCharacterStepUpOn = ECB_No;
-
+	
 	//Sets collision component as root component
 	RootComponent = BulletCollisionComponent;
 	
@@ -41,8 +43,6 @@ AACTOR_BaseWeaponProjectile::AACTOR_BaseWeaponProjectile()
 		BulletProjectileMesh->SetStaticMesh(MeshAsset.Object);
 	}
 	BulletProjectileMesh->SetupAttachment(RootComponent);
-	//BulletProjectileMesh->SetupAttachment(RootComponent);
-	//float BulletProjectileMeshRadius = BulletProjectileMesh->Bounds.SphereRadius;
 
 
 	//Sets BulletProjectileMovementComponent to govern this projectile's movement
@@ -56,10 +56,15 @@ AACTOR_BaseWeaponProjectile::AACTOR_BaseWeaponProjectile()
 	//Sets default despawn timer
 	InitialLifeSpan = 10.0f;
 
+	//Initialize Projectile Damage
+	BulletProjectileDamage = 10.0f;
+
 	//Network Replication
 	bReplicates = true;
-	SetReplicateMovement(true);									// TODO:  A potential room for improvement is to have the client spawn the balls on their end first, to prevent the latency from sending command to server. 
+	SetReplicateMovement(true);									
 
+	//Instigator Controller Refs
+	
 }
 
 void AACTOR_BaseWeaponProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -80,31 +85,52 @@ void AACTOR_BaseWeaponProjectile::BeginPlay()
 
 #pragma endregion
 
+
+
+
 #pragma region Collision Functions
+
+
 
 void AACTOR_BaseWeaponProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	/*Our goal is to have the projectile deal damage if it hits another character.  If it isn't another player, it gets destroyed (for now). */
-
-	//if (OtherActor != nullptr && OtherActor->IsA(TSubclassOf<AACTOR_BaseWeaponProjectile>(ACHAR_Player::StaticClass())))
-	if (OtherComp != nullptr && OtherComp->IsA(UCapsuleComponent::StaticClass()))
+	if (HasAuthority())
 	{
-		AActor* OtherCompOwner = OtherComp->GetOwner();
-		ACHAR_Player* CharacterOwned = Cast<ACHAR_Player>(OtherCompOwner);
-		if (CharacterOwned)
+		APC_Player* AttackingPlayerController = Cast<APC_Player>(GetInstigatorController());
+		ACHAR_Player* AttackingCharacter = Cast<ACHAR_Player>(AttackingPlayerController->GetPawn());
+		if (OtherComp != nullptr && OtherComp->IsA(UCapsuleComponent::StaticClass()))
 		{
+			AActor* DefendingCharacterOwner = OtherComp->GetOwner();
+			ACHAR_Player* DefendingCharacter = Cast<ACHAR_Player>(DefendingCharacterOwner);
+			if (DefendingCharacter)
+			{
+
+				UGameplayStatics::ApplyDamage(DefendingCharacter, BulletProjectileDamage, AttackingPlayerController, AttackingCharacter, UDamageType::StaticClass());
+			}
 			FString hitCharacter = FString::Printf(TEXT("ACTOR_BaseWeaponProjectile::OnHit - Hit another character class"));
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, hitCharacter);
 			Destroy();
 		}
+		else
+		{
+			FString hitNothing = FString::Printf(TEXT("ACTOR_BaseWeaponProjectile::OnHit - Hit Nothing"));
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, hitNothing);
+			Destroy();
+		}
 	}
+		
 	else
 	{
-		FString hitNothing = FString::Printf(TEXT("ACTOR_BaseWeaponProjectile::OnHit - Hit Nothing"));
+		FString hitNothing = FString::Printf(TEXT("ACTOR_BaseWeaponProjectile::Client Side Hit"));
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, hitNothing);
 		Destroy();
 	}
 }
+
+#pragma endregion
+
+
+#pragma region Networking
 
 bool AACTOR_BaseWeaponProjectile::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
 {
@@ -115,15 +141,17 @@ bool AACTOR_BaseWeaponProjectile::IsNetRelevantFor(const AActor* RealViewer, con
 	//UE_LOG(LogTemp, Warning, TEXT("RealViewer: %s"), *RealViewer->GetName());
 	if (InstigatorController == RealViewer)
 	{
-		return false;
+			return false;
 	}
 	else
 	{
 		return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
 	}
 }
-
 #pragma endregion
+
+
+
 
 // I don't think that the projectile needs to evaluate tick functions
 //PrimaryActorTick.bCanEverTick = true;
