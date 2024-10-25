@@ -16,7 +16,7 @@ ACHAR_Player::ACHAR_Player(const class FObjectInitializer& ObjectInitializer):
 {
  	//Default Character Properties
 	MaxHealth = 100.0f;
-	CurrentHealth = MaxHealth-20.0f;
+	CurrentHealth = MaxHealth;
 	
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -74,11 +74,11 @@ void ACHAR_Player::OnHealthUpdate()
 		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
 
-		if (CurrentHealth <= 0.0f)
-		{
-			FString deathMessage = FString::Printf(TEXT("You have perished."), CurrentHealth);
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
-		}
+		//if (CurrentHealth <= 0.0f)
+		//{
+		//	FString deathMessage = FString::Printf(TEXT("You have perished."), CurrentHealth);
+		//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+		//}
 	}
 
 	//Server Functionality
@@ -86,6 +86,13 @@ void ACHAR_Player::OnHealthUpdate()
 	{
 		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+
+		if (CurrentHealth <= 0.0f)
+		{
+			FString deathMessage = FString::Printf(TEXT("You have perished."));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+			Destroy();
+		}
 	}
 }
 

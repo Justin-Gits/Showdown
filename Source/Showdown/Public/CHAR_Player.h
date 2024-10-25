@@ -81,12 +81,9 @@ public:
 #pragma region Weapon Firing Mechanics
 protected:
 
-
-
 public:
 	void RequestFireWeapon();
 	void CheckIfWeaponEquipped();
-
 
 #pragma endregion
 
