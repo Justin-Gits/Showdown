@@ -66,10 +66,10 @@ UCMC_Player* ACHAR_Player::GetCMC_Player() const
 
 void ACHAR_Player::OnHealthUpdate()
 {
+	APC_Player* ReferencePlayer = Cast<APC_Player>(GetController());
 	//Client Functionality
 	if (IsLocallyControlled())
 	{
-		APC_Player* ReferencePlayer = Cast<APC_Player>(GetController());
 		ReferencePlayer->SetHealthBarPercentage();
 		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
@@ -92,6 +92,7 @@ void ACHAR_Player::OnHealthUpdate()
 			FString deathMessage = FString::Printf(TEXT("You have perished."));
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
 			Destroy();
+			//ReferencePlayer->RequestRespawn();
 		}
 	}
 }

@@ -13,5 +13,26 @@ UCLASS()
 class SHOWDOWN_API AGS_TimeArena : public AGameState
 {
 	GENERATED_BODY()
-	
+
+public:
+	AGS_TimeArena();
+
+protected:
+	virtual void Tick(float DeltaTime) override;
+
+#pragma region Spawning Zone Tracking Systems
+public:
+	void GameStart(float SpawnTime);
+
+protected:
+	void TeamAlphaSpawnZoneTimer();
+	void TeamBravoSpawnZoneTimer();
+	int TeamAlphaSpawnZoneCount;
+	int TeamBravoSpawnZoneCount;
+private:
+	FTimerHandle TeamAlphaSpawnZoneHandle;
+	FTimerHandle TeamBravoSpawnZoneHandle;
+	float TimeToGenerateSpawnZone = 3.0f;
+
+#pragma endregion
 };

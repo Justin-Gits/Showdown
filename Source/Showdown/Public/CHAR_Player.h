@@ -10,7 +10,6 @@ class UCMC_Player;
 class APC_Player;
 struct FDamageEvent;
 
-
 UCLASS()
 class SHOWDOWN_API ACHAR_Player : public ACharacter
 {
@@ -72,7 +71,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Health")
 	void SetCurrentHealth(float healthValue);
 
-	//Event for taking damage.  Overridden from APawn.
+	//Taking damage.  Overridden from APawn.
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 

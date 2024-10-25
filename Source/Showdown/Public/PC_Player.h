@@ -115,6 +115,8 @@ public:
 
 
 #pragma endregion
+
+
 protected:
 	//GameMode Declaration
 	AGM_TimeArena* GameModeRef;
