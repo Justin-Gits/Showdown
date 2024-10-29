@@ -4,8 +4,11 @@
 //Custom Classes
 #include "GM_TimeArena.h"
 #include "GS_TimeArena.h"
+#include "CHAR_Player.h"
+#include "CMC_Player.h"
 #include "PC_Player.h"
 #include "ENUM_TimeArena.h"
+#include "PlayerStart_TimeArena.h"
 //Engine Functionality
 #include "Engine/Engine.h"
 
@@ -57,10 +60,59 @@ void AGM_TimeArena::AssignTeam()
 	UE_LOG(LogTemp, Warning, TEXT("NumberOfPlayers = %d"), NumberOfPlayers);
 
 	TeamAlphaPlayerControllers.Add(PlayerControllerList[0]);
-	TeamBravoPlayerControllers.Add(PlayerControllerList[1]);
+	if (NumberOfPlayers>1)
+	{
+		TeamBravoPlayerControllers.Add(PlayerControllerList[1]);
+	}
+	
 
 	//UE_LOG(LogTemp, Warning, TEXT("Team Alpha Player Controller: %s"), *TeamAlphaPlayerControllers[0]->GetName());
 	//UE_LOG(LogTemp, Warning, TEXT("Team Bravo Player Controller: %s"), *TeamBravoPlayerControllers[0]->GetName());
 	
 
 }
+
+void AGM_TimeArena::CreateSpawnPoint(APC_Player* PlayerReference)
+{
+	//Instead of creating spawns, I will be creating a bunch of characters that will be untargettable.  
+	
+	//Create the Player Start. 
+	
+	UWorld* const World = GetWorld();
+	if (World != nullptr)
+	{
+		
+		ACHAR_Player* ActiveCharacter = PlayerReference->GetActiveCharacter();
+		if (ActiveCharacter == nullptr) {
+			UE_LOG(LogTemp, Warning, TEXT("AGM_TimeArena::CreateSpawnPoint - GetActiveCharacter returned nullptr "));
+			return;
+		}
+		FVector SnapshotSpawnLocation = ActiveCharacter->GetActorLocation();
+		FRotator SnapshotSpawnRotation = ActiveCharacter->GetActorRotation();
+		FVector SnapshotVelocity = ActiveCharacter->GetCMC_Player()->Velocity;
+		float SnapshotSpawnHealth = ActiveCharacter->GetCurrentHealth();
+		float SnapshotAmmo = 25.0f; // TODO: Change ammo definition here. 
+
+		//Necessary spawn parameters
+		FActorSpawnParameters SnapshotSpawnParameters;
+		SnapshotSpawnParameters.Owner = PlayerReference;
+		SnapshotSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		//Spawn the Snapshot
+
+		if (SnapshotSpawnBPClass == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AGM_TimeArena::CreateSpawnPoint - SnapshotSpawnBPClass == nullptr, make sure it's defined in BP"));
+		}
+		else
+		{
+			ACHAR_Player* SnapshotSpawn = World->SpawnActor<ACHAR_Player>(SnapshotSpawnBPClass, SnapshotSpawnLocation, SnapshotSpawnRotation, SnapshotSpawnParameters);
+			SnapshotSpawn->InitializeSnapshotSpawn(SnapshotSpawnHealth, SnapshotAmmo, SnapshotVelocity);
+		}
+		
+	}
+
+	//Track the player start in an array. 
+
+}
+

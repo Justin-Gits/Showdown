@@ -15,6 +15,8 @@ class SHOWDOWN_API ACHAR_Player : public ACharacter
 {
 	GENERATED_BODY()
 
+	friend class AGM_TimeArena;
+
 public:
 	// Sets default values for this character's properties
 	ACHAR_Player(const class FObjectInitializer& ObjectInitializer);
@@ -86,7 +88,22 @@ public:
 
 #pragma endregion
 
+#pragma region Spawning
 
+protected:
 
+	UPROPERTY()
+	bool bSnapshotSetup;
+
+	UPROPERTY()
+	FVector SnapshotVelocity;
+	
+	UFUNCTION(BlueprintCallable, Category="Custom Spawn")
+	void InitializeSnapshotSpawn(float SnapshotHealthInput, float SnapshotAmmoInput, FVector SnapshotVelocityInput);
+
+	virtual void PossessedBy(AController* PlayerController) override;
+	
+	UFUNCTION(BlueprintCallable, Category="Custom Spawn")
+	void LeavingSnapshotMode();
 
 };

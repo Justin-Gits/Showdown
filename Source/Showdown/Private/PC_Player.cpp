@@ -218,6 +218,8 @@ void APC_Player::RequestFireWeapon()
 	ActiveCharacter->RequestFireWeapon();
 }
 
+
+
 #pragma endregion
 
 #pragma region HUD
@@ -248,6 +250,20 @@ void APC_Player::SetHealthBarPercentage_Implementation()
 void APC_Player::ServerDamageSelf_Implementation(ACHAR_Player* TargetCharacter, float DamageAmount, APC_Player* InstigatingPlayer)
 {
 	UGameplayStatics::ApplyDamage(TargetCharacter, DamageAmount, this, TargetCharacter, UDamageType::StaticClass());
+}
+
+
+void APC_Player::TestSnapshot()
+{
+	ThisPlayer = this;
+	AGM_TimeArena* CurrentGameMode = Cast<AGM_TimeArena>(GetWorld()->GetAuthGameMode());
+	if (CurrentGameMode)
+	{
+		if (HasAuthority())
+		{
+			CurrentGameMode->CreateSpawnPoint(ThisPlayer);
+		}
+	}
 }
 
 

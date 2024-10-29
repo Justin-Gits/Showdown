@@ -7,6 +7,8 @@
 #include "GM_TimeArena.generated.h"
 
 class AGS_TimeArena;
+class APC_Player;
+class ACHAR_Player;
 
 UCLASS()
 class SHOWDOWN_API AGM_TimeArena : public AGameMode
@@ -49,17 +51,29 @@ AGS_TimeArena* GameStateTimeArena;
 #pragma region Teams
 protected:
 UPROPERTY()
-TArray<APlayerController*> TeamAlphaPlayerControllers;
+TArray<APC_Player*> TeamAlphaPlayerControllers;
 UPROPERTY()
-TArray<APlayerController*> TeamBravoPlayerControllers;
+TArray<APC_Player*> TeamBravoPlayerControllers;
 #pragma endregion
 
 
-#pragma region Custom Game Properties
+#pragma region Spawning
 protected:
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Custom Game Properties")
+	//Snapshot Class to Spawn
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Spawn")
+	TSubclassOf<ACHAR_Player> SnapshotSpawnBPClass;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Custom Spawn")
 	float SpawnZoneTimeInterval;
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "Custom Spawn")
+	void CreateSpawnPoint(APC_Player* PlayerReference);
+
+	
+
 
 #pragma endregion
 

@@ -9,14 +9,18 @@
 #include "Engine/EngineTypes.h"
 #include "GameFramework/DamageType.h"
 #include "Engine/Engine.h"
+#include "Components/CapsuleComponent.h"
 
-// Sets default values
+// Sets Snapshot Mode default values
 ACHAR_Player::ACHAR_Player(const class FObjectInitializer& ObjectInitializer):
 	Super(ObjectInitializer.SetDefaultSubobjectClass<UCMC_Player>(ACharacter::CharacterMovementComponentName))
 {
- 	//Default Character Properties
+ 	//Default Character Spawn Parameters
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
+
+	//Collision Profile - Snapshot
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
 	
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -125,7 +129,16 @@ float ACHAR_Player::TakeDamage(float DamageTaken, FDamageEvent const& DamageEven
 
 void ACHAR_Player::OnRep_CurrentHealth()
 {
-	OnHealthUpdate();
+	if (bSnapshotSetup == true)
+	{
+		//Ignore health update
+		return;
+	}
+	else
+	{
+		OnHealthUpdate();
+	}
+
 }
 
 #pragma endregion
@@ -154,6 +167,44 @@ void ACHAR_Player::CheckIfWeaponEquipped()
 		FString noWeaponEquipped = FString::Printf(TEXT("CHAR_Player::CheckIfWeaponEquipped() - STOP - No Weapon Equipped!"));
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, noWeaponEquipped);
 	}
+}
+
+void ACHAR_Player::InitializeSnapshotSpawn(float SnapshotHealthInput, float SnapshotAmmoInput, FVector SnapshotVelocityInput)
+{
+	bSnapshotSetup = true;
+	SnapshotVelocity = SnapshotVelocityInput;
+	CurrentHealth = SnapshotHealthInput;
+	//Snapshot Ammo Input goes here
+	GetCMC_Player()->GravityScale = 0.0f;
+	
+
+	//More important logic will be placed in LeavingSnapshotMode 
+
+}
+
+void ACHAR_Player::PossessedBy(AController* PlayerController)
+{
+	Super::PossessedBy(PlayerController);
+	LeavingSnapshotMode();
+
+
+}
+
+void ACHAR_Player::LeavingSnapshotMode()
+{
+	GetCMC_Player()->GravityScale = 1.0f;
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
+	if (SnapshotVelocity == FVector::ZeroVector)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ACHAR_Player::LeavingSnapshotMode - ZeroVector for Snapshot Velocity"));
+	}
+	else
+	{
+		GetCMC_Player()->Velocity = SnapshotVelocity;
+	}
+	bSnapshotSetup = false;
+	OnHealthUpdate();
+
 }
 
 #pragma endregion

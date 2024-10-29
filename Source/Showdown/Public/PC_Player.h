@@ -22,8 +22,11 @@ class SHOWDOWN_API APC_Player : public APlayerController
 {
 	GENERATED_BODY()
 
+	friend class AGM_TimeArena;
 public:
 
+	APC_Player* ThisPlayer = this;
+	
 	UFUNCTION(Server, Reliable, BlueprintCallable)									//Request to spawn character - Server RPC
 	void ServerRequestSpawnCharacter();
 
@@ -113,6 +116,8 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerDamageSelf(ACHAR_Player* TargetCharacter, float DamageAmount, APC_Player* InstigatingPlayer);
 
+	UFUNCTION(Exec)
+	void TestSnapshot();
 
 #pragma endregion
 
