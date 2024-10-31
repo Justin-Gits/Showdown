@@ -8,6 +8,6 @@ time mechanics to ambush your opponent as they spawn? Positioning is just as cri
 
 
 Current Progress:
-Almost complete with Version 1.0 of game (Basic features) that establishes synchronized networked multiplayer movement (even with high lag situations) and the time spawning mechanic.  Can provide game outline and 
-roadmap upon request. 
+Almost complete with Version 1.0 of game (Basic features) that establishes synchronized networked multiplayer movement (even with high lag situations) and the time spawning mechanic.  Can provide a game outline, 
+roadmap, and demonstration upon request. 
 
