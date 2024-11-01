@@ -31,6 +31,7 @@ ACHAR_Player::ACHAR_Player(const class FObjectInitializer& ObjectInitializer):
 	//Collision Profile - Snapshot
 	GetCMC_Player()->GravityScale = 0.0f;
 	CC_PlayerCapsuleComponent = Cast<UCC_Player>(GetCapsuleComponent());
+	CC_PlayerCapsuleComponent->SetCollisionProfileName("NoCollision");
 	
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;

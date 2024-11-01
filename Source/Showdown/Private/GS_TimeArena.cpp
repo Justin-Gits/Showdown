@@ -77,7 +77,6 @@ void AGS_TimeArena::TeamAlphaSpawnZoneTimer()
 		}
 
 		//Set up logic to spawn a spawnpoint
-		bSpawnTest = false;
 	}
 	GetWorld()->GetTimerManager().SetTimer(TeamAlphaSpawnZoneHandle, this, &AGS_TimeArena::TeamAlphaSpawnZoneTimer, TimeToGenerateSpawnZone, false);
 }
