@@ -45,7 +45,7 @@ void AGM_TimeArena::StartGame()
 	AssignTeam();
 	if (GameStateTimeArena)
 	{
-		GameStateTimeArena->GameStart(SpawnZoneTimeInterval);
+		GameStateTimeArena->GameStart(SpawnZoneTimeInterval, TeamAlphaPlayerControllers, TeamBravoPlayerControllers);
 	}
 	else
 	{
@@ -59,11 +59,26 @@ void AGM_TimeArena::AssignTeam()
 	int32 NumberOfPlayers = PlayerControllerList.Num();
 	UE_LOG(LogTemp, Warning, TEXT("NumberOfPlayers = %d"), NumberOfPlayers);
 
-	TeamAlphaPlayerControllers.Add(PlayerControllerList[0]);
-	if (NumberOfPlayers>1)
+	for (int i = 0; i < NumberOfPlayers; i++)
 	{
-		TeamBravoPlayerControllers.Add(PlayerControllerList[1]);
+		PC_PlayerList.Add(Cast<APC_Player>(PlayerControllerList[i]));
+		if (i%2 == 0)
+		{
+			int CurrentNumber = TeamAlphaPlayerControllers.Num();
+			TeamAlphaPlayerControllers.Add(PC_PlayerList[i]);
+		}
+		else if (i%2 == 1)
+		{
+			int CurrentNumber = TeamBravoPlayerControllers.Num();
+			TeamBravoPlayerControllers.Add(PC_PlayerList[i]);
+		}
+		
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AGM_TimeArena::AssignTeam - There was an error when dividing the teams."));
+		}
 	}
+
 	
 
 	//UE_LOG(LogTemp, Warning, TEXT("Team Alpha Player Controller: %s"), *TeamAlphaPlayerControllers[0]->GetName());

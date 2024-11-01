@@ -33,12 +33,15 @@ void AGS_TimeArena::GameStart(float SpawnTime, TArray<APC_Player*> AlphaControll
 		UE_LOG(LogTemp, Warning, TEXT("AGS_TimeArena::GameStart - Insufficient Privilege"));
 		return;
 	}
+	TeamAlphaPlayerControllerList = AlphaControllers;
+	TeamBravoPlayerControllerList = BravoControllers;
+
 	TimeToGenerateSpawnZone = SpawnTime;
 	if (TimeToGenerateSpawnZone <= 0.0f)
 	{
 		TimeToGenerateSpawnZone = 10.0f;				// TODO:  Clamp this value or make sure it can't be less than zero. 
 	}
-	TeamAlphaSpawnZoneCount = 1;					// TODO:  Counting spawn zones will be refactored to just get the length of the spawn detail array. 
+	TeamAlphaSpawnZoneCount = 1;					// TODO:  I should place an initial spawn at the locations where the players start.  
 	TeamBravoSpawnZoneCount = 1;
 	UE_LOG(LogTemp, Warning, TEXT("AGS_TimeArena - Timers Initialized, Wait: %f seconds"), TimeToGenerateSpawnZone);
 	GetWorld()->GetTimerManager().SetTimer(TeamAlphaSpawnZoneHandle, this, &AGS_TimeArena::TeamAlphaSpawnZoneTimer, TimeToGenerateSpawnZone, false);
@@ -48,7 +51,6 @@ void AGS_TimeArena::GameStart(float SpawnTime, TArray<APC_Player*> AlphaControll
 void AGS_TimeArena::TeamAlphaSpawnZoneTimer()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Team Alpha Has Secured %d Spawn Zones"), TeamAlphaSpawnZoneCount);
-	GetWorld()->GetTimerManager().SetTimer(TeamAlphaSpawnZoneHandle, this, &AGS_TimeArena::TeamAlphaSpawnZoneTimer, TimeToGenerateSpawnZone, false);
 	// Create our new spawn point or create information about the spawn point
 	// If we're creating a spawnpoint object we will:
 	// Spawn the spawnpoint object at the player position (this will cause the server to create the object and send it to the clients)
@@ -69,8 +71,6 @@ void AGS_TimeArena::TeamAlphaSpawnZoneTimer()
 		ensureMsgf(CurrentGameMode != nullptr, TEXT("CurrentGameMode = nullptr"));
 		APC_Player* TeamAlphaPlayer = TeamAlphaPlayerControllerList[0];
 		ensureMsgf(CurrentGameMode != nullptr, TEXT("TeamAlphaPlayerControllerList [0] = nullptr"));
-		//ACHAR_Player* TeamAlphaCharacter = Cast<ACHAR_Player>(TeamAlphaPlayer->GetCharacter());
-		//ensureMsgf(CurrentGameMode != nullptr, TEXT("TeamAlphaCharacter = nullptr"));
 		if (HasAuthority())
 		{
 			CurrentGameMode->CreateSpawnPoint(TeamAlphaPlayer);
@@ -79,11 +79,27 @@ void AGS_TimeArena::TeamAlphaSpawnZoneTimer()
 		//Set up logic to spawn a spawnpoint
 		bSpawnTest = false;
 	}
+	GetWorld()->GetTimerManager().SetTimer(TeamAlphaSpawnZoneHandle, this, &AGS_TimeArena::TeamAlphaSpawnZoneTimer, TimeToGenerateSpawnZone, false);
 }
 
 void AGS_TimeArena::TeamBravoSpawnZoneTimer()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Team Bravo Has Secured %d Spawn Zones"), TeamBravoSpawnZoneCount);
+	if (bSpawnTest == true)
+	{
+		AGM_TimeArena* CurrentGameMode = Cast<AGM_TimeArena>(GetWorld()->GetAuthGameMode());
+		ensureMsgf(CurrentGameMode != nullptr, TEXT("CurrentGameMode = nullptr"));
+		APC_Player* TeamBravoPlayer = TeamBravoPlayerControllerList[0];
+		ensureMsgf(CurrentGameMode != nullptr, TEXT("TeamBravoPlayerControllerList [0] = nullptr"));
+		if (HasAuthority())
+		{
+			CurrentGameMode->CreateSpawnPoint(TeamBravoPlayer);
+		}
+
+		bSpawnTest = false;
+	}
+	
+	
 	GetWorld()->GetTimerManager().SetTimer(TeamBravoSpawnZoneHandle, this, &AGS_TimeArena::TeamBravoSpawnZoneTimer, TimeToGenerateSpawnZone, false);
 
 	TeamBravoSpawnZoneCount++;

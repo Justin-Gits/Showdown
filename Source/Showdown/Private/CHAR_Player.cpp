@@ -1,32 +1,43 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+//Custom Classes
 #include "CHAR_Player.h"
 #include "PC_Player.h"
 #include "CMC_Player.h"
 #include "SMC_BaseWeapon.h"
-#include "Net/UnrealNetwork.h"
+#include "CC_Player.h"
+
+//Engine Functionality
 #include "Engine/EngineTypes.h"
 #include "GameFramework/DamageType.h"
 #include "Engine/Engine.h"
 #include "Components/CapsuleComponent.h"
 
+//Replication
+#include "Net/UnrealNetwork.h"
+
 // Sets Snapshot Mode default values
 ACHAR_Player::ACHAR_Player(const class FObjectInitializer& ObjectInitializer):
-	Super(ObjectInitializer.SetDefaultSubobjectClass<UCMC_Player>(ACharacter::CharacterMovementComponentName))
+	Super(ObjectInitializer
+		.SetDefaultSubobjectClass<UCMC_Player>(ACharacter::CharacterMovementComponentName)
+		.SetDefaultSubobjectClass<UCC_Player>(ACharacter::CapsuleComponentName)
+		)
 {
  	//Default Character Spawn Parameters
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 
 	//Collision Profile - Snapshot
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+	GetCMC_Player()->GravityScale = 0.0f;
+	CC_PlayerCapsuleComponent = Cast<UCC_Player>(GetCapsuleComponent());
 	
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	//Network Replication
 	bReplicates = true;
+	
 	SetReplicateMovement(true);
 
 }
@@ -64,6 +75,42 @@ void ACHAR_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 UCMC_Player* ACHAR_Player::GetCMC_Player() const
 {
 	return Cast<UCMC_Player>(GetCharacterMovement());
+}
+
+void ACHAR_Player::Jump()
+{
+	if (HasAuthority())
+	{
+		Super::Jump();
+	}
+	else if (IsLocallyControlled())
+	{
+		Super::Jump();
+		//Jump();
+
+		//Debug print out gravity and collision information:
+		float GravityValue = GetCMC_Player()->GravityScale = 1.0f;
+		FString gravityMessage = FString::Printf(TEXT("ACHAR_Player::Jump() - Gravity = %f"),GravityValue);
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, gravityMessage);
+
+		FName CollisionProfileName = CC_PlayerCapsuleComponent->GetCollisionProfileName();
+		//FString collisionMessage = FString::Printf(TEXT("ACHAR_Player::Jump() - CollisionProfileName = %s"), CollisionProfileName.ToString());
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, CollisionProfileName.ToString());
+
+		
+		ServerJump();
+	}
+}
+
+void ACHAR_Player::ServerJump_Implementation()
+{
+	if (HasAuthority())
+	{
+		Super::Jump();
+		FString clientJump = FString::Printf(TEXT("ACHAR_Player::ServerJump_Implementation() - RPC to Jump!"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, clientJump);
+	}
+	
 }
 
 #pragma region Health
@@ -193,7 +240,15 @@ void ACHAR_Player::PossessedBy(AController* PlayerController)
 void ACHAR_Player::LeavingSnapshotMode()
 {
 	GetCMC_Player()->GravityScale = 1.0f;
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
+	if (CC_PlayerCapsuleComponent == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ACHAR_Player::LeavingSnapshotMode - CC_PlayerCapsuleComponent = nullptr"));
+	}
+	else
+	{
+		CC_PlayerCapsuleComponent->SetCollisionProfileName("Pawn");
+	}
+		//GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
 	if (SnapshotVelocity == FVector::ZeroVector)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ACHAR_Player::LeavingSnapshotMode - ZeroVector for Snapshot Velocity"));

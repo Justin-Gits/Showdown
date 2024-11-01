@@ -165,6 +165,7 @@ void APC_Player::RequestJump()
 {
 	CheckActiveCharacter();
 	//UE_LOG(LogTemp, Warning, TEXT("APC_Network_Multiplayer::RequestJump Executed"));
+	
 	ActiveCharacter->Jump();
 }
 

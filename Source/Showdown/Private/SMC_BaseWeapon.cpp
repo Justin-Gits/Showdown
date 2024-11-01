@@ -59,7 +59,8 @@ void USMC_BaseWeapon::FireWeapon(ACHAR_Player* RequestingCharacter)
 			const FVector BulletProjectileSpawnLocation = CharacterSelf->GetActorLocation() + BulletProjectileSpawnRotation.RotateVector(MuzzleOffset);
 			FVector TestProjectileSpawnLocation = FVector(100.0f, 100.0f, 100.0f);
 
-			//Set Spawn Collision Handling Override
+			//Set Spawn 
+			// Handling Override
 			FActorSpawnParameters BulletProjectileSpawnParameters;
 			BulletProjectileSpawnParameters.Owner = GetOwner();
 			//BulletProjectileSpawnParameters.Instigator = GetInstigator();

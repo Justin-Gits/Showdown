@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "CMC_Player.generated.h"
 
 
@@ -15,6 +16,11 @@ class SHOWDOWN_API UCMC_Player : public UCharacterMovementComponent
 	friend class FSavedMove_My;
 
 #pragma region Defaults
+public:
+	UCMC_Player();
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+
 private:
 	//The ground speed when running
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CMC_Player", Meta = (AllowPrivateAccess = "true"));
@@ -32,40 +38,41 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CMC_Player", Meta = (AllowPrivateAccess = "true"));
 	float SprintAcceleration = 2000.0f;
 
+protected:
+	//Add custom properties to be replicated
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 #pragma endregion
 
-#pragma region Sprinting Functions
+#pragma region Sprinting
 
 public:
 	//Sets sprinting to either enabled or disabled
 	UFUNCTION(BlueprintCallable, Category = "CMC_Player")
 	void SetSprinting(bool sprinting);
 
-#pragma endregion
 
-#pragma region Overrides
-public:
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 	virtual float GetMaxSpeed() const override;
 	virtual float GetMaxAcceleration() const override;
-	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
-	
-#pragma endregion
 
-#pragma region Compressed Flags
 private:
-	uint8 WantsToSprint : 1;
-#pragma endregion
-
-#pragma region Private Variables
 	//True if the sprint key is down
 	bool SprintKeyDown = false;
 
 #pragma endregion
+
+#pragma region Compressed Flags
+public:
+	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
+	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
+
+private:
+	uint8 WantsToSprint : 1;
+#pragma endregion
 };
 
+
+#pragma region FSavedMove_My Class
 
 /*These two classes(FSavedMove_My& FNetworkPredictionData_Client_My) are used by Unreal and it is the way that they handle networked character movement with the concept of "Saved Moves")_
   So, whenever you move on the client (e.g.: Jump), you jump on the client, and then it saves the information about that jump into the FSavedMove_My class, and then it sends that Saved Move
@@ -99,6 +106,10 @@ private:
 	uint8 SavedWantsToSprint : 1;
 };
 
+#pragma endregion
+
+
+#pragma region FNetworkPredictionData Class
 //This is basically just a helper class that connects the FSavedMove to the CharacterMovementComponent. 
 class FNetworkPredictionData_Client_My : public FNetworkPredictionData_Client_Character
 {
@@ -111,3 +122,5 @@ public:
 	//brief Allocates a new copy of our custom saved move
 	virtual FSavedMovePtr AllocateNewMove() override;
 };
+
+#pragma endregion

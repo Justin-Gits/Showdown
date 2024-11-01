@@ -29,7 +29,7 @@ protected:
 
 #pragma region Spawning
 public:
-	void GameStart(float SpawnTime);
+	void GameStart(float SpawnTime, TArray<APC_Player*> AlphaControllers, TArray<APC_Player*> BravoControllers);
 
 protected:
 	void TeamAlphaSpawnZoneTimer();

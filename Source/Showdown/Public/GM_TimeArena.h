@@ -42,6 +42,7 @@ void AssignTeam();
 
 #pragma region References
 TArray<APlayerController*> PlayerControllerList;
+TArray<APC_Player*> PC_PlayerList;
 AGS_TimeArena* GameStateTimeArena;
 
 

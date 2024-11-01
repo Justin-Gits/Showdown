@@ -8,6 +8,7 @@
 
 class UCMC_Player;
 class APC_Player;
+class UCC_Player;
 struct FDamageEvent;
 
 UCLASS()
@@ -17,6 +18,7 @@ class SHOWDOWN_API ACHAR_Player : public ACharacter
 
 	friend class AGM_TimeArena;
 
+#pragma region Defaults
 public:
 	// Sets default values for this character's properties
 	ACHAR_Player(const class FObjectInitializer& ObjectInitializer);
@@ -33,12 +35,28 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+#pragma endregion
+
+#pragma region Controller and Movement Component Interface
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	//Gets the custom character movement component - CMC_Player. 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	UCMC_Player* GetCMC_Player() const;
+
+#pragma endregion
+
+#pragma region Movement
+
+	virtual void Jump() override;
+
+	UFUNCTION(Server, Reliable)
+	void ServerJump();
+	//virtual void StopJumping() override;
+
+#pragma endregion
 
 #pragma region Character Health
 
@@ -93,6 +111,9 @@ public:
 protected:
 
 	UPROPERTY()
+	UCC_Player* CC_PlayerCapsuleComponent;
+	
+	UPROPERTY()
 	bool bSnapshotSetup;
 
 	UPROPERTY()
@@ -106,4 +127,5 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Custom Spawn")
 	void LeavingSnapshotMode();
 
+#pragma endregion
 };

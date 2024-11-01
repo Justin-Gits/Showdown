@@ -14,9 +14,17 @@
 
 
 
-void UCMC_Player::SetSprinting(bool sprinting)
+#pragma region Defaults
+UCMC_Player::UCMC_Player()
 {
-	SprintKeyDown = sprinting;
+	//Default constructor
+}
+
+void UCMC_Player::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCMC_Player, GravityScale);
 }
 
 void UCMC_Player::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -37,7 +45,7 @@ void UCMC_Player::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 
 			if (FVector::DotProduct(velocity2D, forward2D) > 0.5f)
 			{
-				/*I believe the source of my rubberbanding is the fact that the server is not changing the movement speed when the client presses the sprint button. 
+				/*I believe the source of my rubberbanding is the fact that the server is not changing the movement speed when the client presses the sprint button.
 				In order to fix this, I intend to insert an RPC here which tells the server to update this value.*/
 				WantsToSprint = true;
 			}
@@ -52,56 +60,48 @@ void UCMC_Player::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 		}
 	}
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
+
 }
 
+#pragma endregion
 
-void UCMC_Player::UpdateFromCompressedFlags(uint8 Flags)
+#pragma region Sprinting
+void UCMC_Player::SetSprinting(bool sprinting)
 {
-	Super::UpdateFromCompressedFlags(Flags);
-
-	/*  There are 4 custom move flags for us to use.  Below is what each is currently being used for:
-			FLAG_Custom_0		=0x10, // Sprinting
-			FLAG_Custom_1		=0x20, // Unused
-			FLAG_Custom_2		=0x40, // Unused
-			FLAG_Custom_3		=0x80, // Unused
-	*/
-
-	//Read the values from the compressed flags
-	WantsToSprint = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
+	SprintKeyDown = sprinting;
 }
 
 float UCMC_Player::GetMaxSpeed() const
 {
 	switch (MovementMode)
 	{
-		case MOVE_Walking:
-		case MOVE_NavWalking:
+	case MOVE_Walking:
+	case MOVE_NavWalking:
+	{
+		if (IsCrouching())
 		{
-			if (IsCrouching())
-			{
-				return MaxWalkSpeedCrouched;		// TODO: I may need to update this for the situations where I am crouching and I want to sprint. 
-			}
-			else
-			{
-				if (WantsToSprint)
-				{
-					return SprintSpeed;
-				}
-			}
-			return RunSpeed;
+			return MaxWalkSpeedCrouched;		// TODO: I may need to update this for the situations where I am crouching and I want to sprint. 
 		}
-		case MOVE_Falling:
-			return RunSpeed;
-		case MOVE_Swimming:
-			return MaxSwimSpeed;
-		case MOVE_Flying:
-			return MaxFlySpeed;
-		case MOVE_Custom:
-			return MaxCustomMovementSpeed;
-		case MOVE_None:
-		default:
-			return 0.f;
+		else
+		{
+			if (WantsToSprint)
+			{
+				return SprintSpeed;
+			}
+		}
+		return RunSpeed;
+	}
+	case MOVE_Falling:
+		return RunSpeed;
+	case MOVE_Swimming:
+		return MaxSwimSpeed;
+	case MOVE_Flying:
+		return MaxFlySpeed;
+	case MOVE_Custom:
+		return MaxCustomMovementSpeed;
+	case MOVE_None:
+	default:
+		return 0.f;
 	}
 }
 
@@ -118,6 +118,44 @@ float UCMC_Player::GetMaxAcceleration() const
 
 	return Super::GetMaxAcceleration();
 }
+
+
+#pragma endregion
+
+#pragma region Compressed Flags
+
+void UCMC_Player::UpdateFromCompressedFlags(uint8 Flags)
+{
+	Super::UpdateFromCompressedFlags(Flags);
+
+	/*  There are 4 custom move flags for us to use.  Below is what each is currently being used for:
+			FLAG_Custom_0		=0x10, // Sprinting
+			FLAG_Custom_1		=0x20, // Unused
+			FLAG_Custom_2		=0x40, // Unused
+			FLAG_Custom_3		=0x80, // Unused
+	*/
+
+	//Read the values from the compressed flags
+	WantsToSprint = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
+}
+
+FNetworkPredictionData_Client* UCMC_Player::GetPredictionData_Client() const
+{
+	if (ClientPredictionData == nullptr)
+	{
+		//Return our custom client prediction class instead
+		UCMC_Player* MutableThis = const_cast<UCMC_Player*>(this);
+		MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_My(*this);
+	}
+
+
+	return ClientPredictionData;
+}
+
+
+#pragma endregion
+
+#pragma region FSavedMove_My Class
 
 void FSavedMove_My::Clear()
 {
@@ -178,18 +216,9 @@ void FSavedMove_My::PrepMoveFor(ACharacter* Character)
 	}
 }
 
-FNetworkPredictionData_Client* UCMC_Player::GetPredictionData_Client() const
-{
-	if (ClientPredictionData == nullptr)
-	{
-		//Return our custom client prediction class instead
-		UCMC_Player* MutableThis = const_cast<UCMC_Player*>(this);
-		MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_My(*this);
-	}
-	
-	
-	return ClientPredictionData;
-}
+#pragma endregion
+
+#pragma region FNetworkPredictionData class
 
 FNetworkPredictionData_Client_My::FNetworkPredictionData_Client_My(const UCharacterMovementComponent& ClientMovement)
 	:Super(ClientMovement)
@@ -200,3 +229,5 @@ FSavedMovePtr FNetworkPredictionData_Client_My::AllocateNewMove()
 {
 	return FSavedMovePtr(new FSavedMove_My());
 }
+
+#pragma endregion
