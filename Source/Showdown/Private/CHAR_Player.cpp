@@ -7,6 +7,7 @@
 #include "SMC_BaseWeapon.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/EngineTypes.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/DamageType.h"
 #include "Engine/Engine.h"
 
@@ -20,6 +21,11 @@ ACHAR_Player::ACHAR_Player(const class FObjectInitializer& ObjectInitializer):
 	
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	//Setup Initial Snapshot State
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+	GetCMC_Player()->GravityScale = 0.0f;
+
 
 	//Network Replication
 	bReplicates = true;
@@ -154,6 +160,24 @@ void ACHAR_Player::CheckIfWeaponEquipped()
 		FString noWeaponEquipped = FString::Printf(TEXT("CHAR_Player::CheckIfWeaponEquipped() - STOP - No Weapon Equipped!"));
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, noWeaponEquipped);
 	}
+}
+
+void ACHAR_Player::MulticastSnapshotPossessionEvent_Implementation()
+{
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
+	GetCMC_Player()->GravityScale = 1.0f;
+}
+
+void ACHAR_Player::PossessedBy(AController* NewController)
+{
+	//Server Changes
+	Super::PossessedBy(NewController);
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
+	GetCMC_Player()->GravityScale = 1.0f;
+
+	//RPC to replicate the changes to the clients
+	MulticastSnapshotPossessionEvent();
+
 }
 
 #pragma endregion

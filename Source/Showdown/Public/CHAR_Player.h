@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Net/UnrealNetwork.h"
 #include "CHAR_Player.generated.h"
 
 class UCMC_Player;
@@ -86,7 +87,14 @@ public:
 
 #pragma endregion
 
+#pragma region Character Possession
+public:	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSnapshotPossessionEvent();
 
+	virtual void PossessedBy(AController* NewController) override;
+
+#pragma endregion
 
 
 };
