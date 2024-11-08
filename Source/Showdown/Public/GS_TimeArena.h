@@ -6,9 +6,8 @@
 #include "GameFramework/GameState.h"
 #include "GS_TimeArena.generated.h"
 
-/**
- * 
- */
+class AGM_TimeArena;
+
 UCLASS()
 class SHOWDOWN_API AGS_TimeArena : public AGameState
 {
@@ -23,16 +22,17 @@ protected:
 #pragma region Spawning Zone Tracking Systems
 public:
 	void GameStart(float SpawnTime);
+	
+	UPROPERTY(EditDefaultsOnly, Category="Snapshot Spawn")
+	float TimeToGenerateSpawnZone = 3.0f;
 
 protected:
 	void TeamAlphaSpawnZoneTimer();
 	void TeamBravoSpawnZoneTimer();
 	int TeamAlphaSpawnZoneCount;
 	int TeamBravoSpawnZoneCount;
-private:
 	FTimerHandle TeamAlphaSpawnZoneHandle;
 	FTimerHandle TeamBravoSpawnZoneHandle;
-	float TimeToGenerateSpawnZone = 3.0f;
 
 #pragma endregion
 };

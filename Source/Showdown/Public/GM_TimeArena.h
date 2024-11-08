@@ -7,6 +7,7 @@
 #include "GM_TimeArena.generated.h"
 
 class AGS_TimeArena;
+class ACHAR_Player;
 
 UCLASS()
 class SHOWDOWN_API AGM_TimeArena : public AGameMode
@@ -39,8 +40,13 @@ UFUNCTION(BlueprintCallable, Category = "Game Setup")
 void AssignTeam();
 
 #pragma region References
-TArray<APlayerController*> PlayerControllerList;
-AGS_TimeArena* GameStateTimeArena;
+public:
+	const TArray<APC_Player*> GetPlayerControllerList() { return PlayerControllerList;}
+	const float GetSpawnZoneTimeInterval() { return SpawnZoneTimeInterval; }
+
+protected:
+	TArray<APC_Player*> PlayerControllerList;
+	AGS_TimeArena* GameStateTimeArena;
 
 
 #pragma endregion
@@ -48,12 +54,31 @@ AGS_TimeArena* GameStateTimeArena;
 
 #pragma region Teams
 protected:
+	UPROPERTY()
+	TArray<APC_Player*> TeamAlphaPlayerControllers;
 UPROPERTY()
-TArray<APlayerController*> TeamAlphaPlayerControllers;
-UPROPERTY()
-TArray<APlayerController*> TeamBravoPlayerControllers;
+	TArray<APC_Player*> TeamBravoPlayerControllers;
 #pragma endregion
 
+#pragma region Snapshot Spawn
+public:
+	UFUNCTION()
+	void RequestSnapshotSpawn(APC_Player* PlayerReference);
+
+	UFUNCTION()
+	bool GetEnableSnapshotSpawns() { return EnableSnapshotSpawns; }
+
+protected:
+	UFUNCTION()
+	void CreateSnapshotSpawnPoint(APC_Player* PlayerReference);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Game Properties")
+	TSubclassOf<ACHAR_Player> SnapshotSpawnBPClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Game Properties")
+	bool EnableSnapshotSpawns;
+
+#pragma endregion
 
 #pragma region Custom Game Properties
 protected:

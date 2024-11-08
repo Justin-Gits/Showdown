@@ -4,6 +4,8 @@
 //Custom Classes
 #include "GS_TimeArena.h"
 #include "GM_TimeArena.h"
+#include "PC_Player.h"
+#include "PS_Player.h"
 //Engine Functionality
 #include "TimerManager.h"
 #include "Engine/World.h"
@@ -27,16 +29,38 @@ void AGS_TimeArena::GameStart(float SpawnTime)
 		UE_LOG(LogTemp, Warning, TEXT("AGS_TimeArena::GameStart - Insufficient Privilege"));
 		return;
 	}
-	TimeToGenerateSpawnZone = SpawnTime;
-	if (TimeToGenerateSpawnZone <= 0.0f)
+
+	if (GetWorld() == nullptr)
 	{
-		TimeToGenerateSpawnZone = 3.0f;				// TODO:  Clamp this value or make sure it can't be less than zero. 
+		return;
 	}
-	TeamAlphaSpawnZoneCount = 1;					// TODO:  Counting spawn zones will be refactored to just get the length of the spawn detail array. 
-	TeamBravoSpawnZoneCount = 1;
-	UE_LOG(LogTemp, Warning, TEXT("AGS_TimeArena - Timers Initialized, Wait: %f seconds"), TimeToGenerateSpawnZone);
-	GetWorld()->GetTimerManager().SetTimer(TeamAlphaSpawnZoneHandle, this, &AGS_TimeArena::TeamAlphaSpawnZoneTimer, TimeToGenerateSpawnZone, false);
-	GetWorld()->GetTimerManager().SetTimer(TeamBravoSpawnZoneHandle, this, &AGS_TimeArena::TeamBravoSpawnZoneTimer, TimeToGenerateSpawnZone, false);
+	
+	AGM_TimeArena* GM_Reference = Cast<AGM_TimeArena>(GetWorld()->GetAuthGameMode());
+
+	TArray<APC_Player*> PlayerControllerList = GM_Reference->GetPlayerControllerList();
+	int PlayerCount = PlayerControllerList.Num();
+
+	for (int i = 0; i < PlayerCount; i++)
+	{
+		APS_Player* CurrentPlayerState = PlayerControllerList[i]->GetPlayerState<APS_Player>();
+		CurrentPlayerState->SetGMSpawnZoneTimeInterval();
+		CurrentPlayerState->BeginSpawnTimers();
+	}
+
+
+
+	//I need to give the player state control of the spawning logic in order to create a scalable environment. 
+
+	//TimeToGenerateSpawnZone = SpawnTime;
+	//if (TimeToGenerateSpawnZone <= 0.0f)
+	//{
+	//	TimeToGenerateSpawnZone = 3.0f;				// TODO:  Clamp this value or make sure it can't be less than zero. 
+	//}
+	//TeamAlphaSpawnZoneCount = 1;					// TODO:  Counting spawn zones will be refactored to just get the length of the spawn detail array. 
+	//TeamBravoSpawnZoneCount = 1;
+	//UE_LOG(LogTemp, Warning, TEXT("AGS_TimeArena - Timers Initialized, Wait: %f seconds"), TimeToGenerateSpawnZone);
+	//GetWorld()->GetTimerManager().SetTimer(TeamAlphaSpawnZoneHandle, this, &AGS_TimeArena::TeamAlphaSpawnZoneTimer, TimeToGenerateSpawnZone, false);
+	//GetWorld()->GetTimerManager().SetTimer(TeamBravoSpawnZoneHandle, this, &AGS_TimeArena::TeamBravoSpawnZoneTimer, TimeToGenerateSpawnZone, false);
 }
 
 void AGS_TimeArena::TeamAlphaSpawnZoneTimer()

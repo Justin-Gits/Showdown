@@ -6,8 +6,11 @@
 #include "GS_TimeArena.h"
 #include "PC_Player.h"
 #include "ENUM_TimeArena.h"
+#include "CHAR_Player.h"
+#include "CMC_Player.h"
 //Engine Functionality
 #include "Engine/Engine.h"
+#include "Engine/World.h"
 
 
 void AGM_TimeArena::SpawnCharacterForPlayer_Implementation(APC_Player* PlayerController)
@@ -18,13 +21,15 @@ void AGM_TimeArena::SpawnCharacterForPlayer_Implementation(APC_Player* PlayerCon
 void AGM_TimeArena::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
-	PlayerControllerList.Add(NewPlayer);
+	APC_Player* CastNewPlayer = Cast<APC_Player>(NewPlayer);
+	PlayerControllerList.Add(CastNewPlayer);
 }
 
 void AGM_TimeArena::SwapPlayerControllers(APlayerController* OldPC, APlayerController* NewPC)
 {
 	Super::SwapPlayerControllers(OldPC, NewPC);
-	PlayerControllerList.Add(NewPC);
+	APC_Player* CastNewPC = Cast<APC_Player>(NewPC);
+	PlayerControllerList.Add(CastNewPC);
 
 }
 
@@ -63,4 +68,45 @@ void AGM_TimeArena::AssignTeam()
 	//UE_LOG(LogTemp, Warning, TEXT("Team Bravo Player Controller: %s"), *TeamBravoPlayerControllers[0]->GetName());
 	
 
+}
+void AGM_TimeArena::RequestSnapshotSpawn(APC_Player* PlayerReference)
+{
+	CreateSnapshotSpawnPoint(PlayerReference);
+}
+//Create a snapshot spawn point based on the player's current position
+void AGM_TimeArena::CreateSnapshotSpawnPoint(APC_Player* PlayerReference)
+{
+	UWorld* const World_Reference = GetWorld();
+	if (World_Reference != nullptr)
+	{
+		ACHAR_Player* CHAR_Reference = PlayerReference->GetActiveCharacter();
+		if (CHAR_Reference == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AGM_TimeArena::CreateSpawnPoint - GetActiveCharacter returned nullptr"));
+			return;
+		}
+		
+		//Snapshot Information
+		FVector SnapshotSpawnLocation = CHAR_Reference->GetActorLocation();
+		FRotator SnapshotSpawnRotation = CHAR_Reference->GetActorRotation();
+		FVector SnapshotSpawnVelocity = CHAR_Reference->GetCMC_Player()->Velocity;
+		float SnapshotSpawnHealth = CHAR_Reference->GetCurrentHealth();
+		float SnapshotSpawnAmmo = 25.0f; // TODO: Update this when I incorporate ammunition
+
+		//Spawn Parameters
+		FActorSpawnParameters SnapshotSpawnParameters;
+		SnapshotSpawnParameters.Owner = PlayerReference;
+		SnapshotSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		//Spawn the Snapshot
+		ensureMsgf(SnapshotSpawnBPClass != nullptr, TEXT("SnapshotSpawnBPClass is not initialized in UE Editor"));
+		if (SnapshotSpawnBPClass == nullptr) { return; }
+		ACHAR_Player* SnapshotSpawn = World_Reference->SpawnActor<ACHAR_Player>(SnapshotSpawnBPClass, SnapshotSpawnLocation, SnapshotSpawnRotation, SnapshotSpawnParameters);
+
+		// TODO:  Initialize the rest of the snapshot spawn parameters: Health, Ammo, Velocity.  See checkin v.20 from main branch for info.
+
+		// TODO:  I need to start tracking the player spawns in some sort of array. 
+
+
+	}
 }

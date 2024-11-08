@@ -23,6 +23,8 @@ class SHOWDOWN_API APC_Player : public APlayerController
 	GENERATED_BODY()
 
 public:
+	
+	friend class AGM_TimeArena;
 
 	UFUNCTION(Server, Reliable, BlueprintCallable)									//Request to spawn character - Server RPC
 	void ServerRequestSpawnCharacter();
