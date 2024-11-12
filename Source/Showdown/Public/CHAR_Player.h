@@ -56,6 +56,7 @@ protected:
 	void OnHealthUpdate();		//Response to health being updated.  Called on the server immediately after modification, and on clients in response to receiving an update. 
 
 public:
+	
 	//Getter Function for Max Health
 	UFUNCTION(BlueprintPure, Category="Health")
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
@@ -86,7 +87,7 @@ public:
 
 #pragma endregion
 
-#pragma region Character Possession
+#pragma region Character Management
 public:	
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastSnapshotPossessionEvent();

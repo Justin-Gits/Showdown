@@ -53,7 +53,6 @@ protected:
 
 #pragma endregion
 
-
 #pragma region Teams
 protected:
 	UPROPERTY()
@@ -61,6 +60,14 @@ protected:
 UPROPERTY()
 	TArray<APC_Player*> TeamBravoPlayerControllers;
 #pragma endregion
+
+#pragma region Character Destruction
+
+public:
+
+
+#pragma endregion
+
 
 #pragma region Snapshot Spawn
 public:

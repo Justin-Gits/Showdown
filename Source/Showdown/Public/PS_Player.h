@@ -35,7 +35,7 @@ public:
 	void RequestAddToSnapshotArray(ACHAR_Player* NewSnapshot);
 
 	UFUNCTION()
-	void RequestSpawnArrayPrintout();
+	void DebugSpawnArrayPrintout();
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Properties")

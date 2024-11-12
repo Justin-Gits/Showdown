@@ -97,13 +97,17 @@ void ACHAR_Player::OnHealthUpdate()
 		{
 			FString deathMessage = FString::Printf(TEXT("You have perished."));
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+			ReferencePlayer->UpdateHUD = false;
 			Destroy();
+
+			// TODO:  Create RPC to destroy this actor if it doesn't occur on the listen server.  Also replicate the UpdateHUD bool or find a workaround. 
+
+			//ServerDestroyCharacter(this);
+			// Request Destroy(ReferenceCharacter). 
 			//ReferencePlayer->RequestRespawn();
 		}
 	}
 }
-
-
 
 float ACHAR_Player::GetCurrentHealthPercentage() const
 {
@@ -179,6 +183,7 @@ void ACHAR_Player::PossessedBy(AController* NewController)
 	MulticastSnapshotPossessionEvent();
 
 }
+
 
 #pragma endregion
 

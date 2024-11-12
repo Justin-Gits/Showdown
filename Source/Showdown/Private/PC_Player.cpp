@@ -53,6 +53,7 @@ void APC_Player::OnPossess(APawn* InPawn)
 	{
 		ClientConstructHUDWidget();
 	}
+	ActiveCharacter->OnDestroyed.AddDynamic(this, &APC_Player::ListenerOnDestroyed);
 }
 
 void APC_Player::DelayedEIBinding()
@@ -216,6 +217,11 @@ void APC_Player::RequestFireWeapon()
 {
 	CheckActiveCharacter();
 	ActiveCharacter->RequestFireWeapon();
+}
+
+void APC_Player::ListenerOnDestroyed(AActor* DestroyedActor)
+{
+	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ListenerOnDestroyed - Actor Destroyed."));
 }
 
 #pragma endregion

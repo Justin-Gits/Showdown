@@ -105,6 +105,9 @@ protected:
 	void ConstructHUDWidget();
 
 public:
+	UPROPERTY(BlueprintReadOnly)
+	bool UpdateHUD = true;
+	
 	UFUNCTION(BlueprintNativeEvent, Category = "Health")							//BP NATIVE: If the player's health changes, this function will be executed to update the HUD health bar. 
 	void SetHealthBarPercentage();
 
@@ -128,5 +131,9 @@ protected:
 
 	//PlayerSubsystem Declaration
 	UEnhancedInputLocalPlayerSubsystem* PlayerSubsystem = nullptr;
+
+	//Test Listener Function
+	UFUNCTION()
+	void ListenerOnDestroyed(AActor* DestroyedActor);
 
 };
