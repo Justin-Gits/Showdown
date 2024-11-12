@@ -39,6 +39,29 @@ void APS_Player::BeginSpawnTimers()
 	
 }
 
+void APS_Player::RequestAddToSnapshotArray(ACHAR_Player* NewSnapshot)
+{
+	if (HasAuthority())
+	{
+		AddToSnapshotArray(NewSnapshot);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::RequestAddToSnapshotArray - Insufficient Priveleges"));
+	}
+}
+
+void APS_Player::DebugSpawnArrayPrintout()
+{
+	UE_LOG(LogTemp, Warning, TEXT("SpawnableCharacters[%d]"), SnapshotCharacterArray.Num());
+}
+
+void APS_Player::AddToSnapshotArray(ACHAR_Player* NewSnapshot)
+{
+	SnapshotCharacterArray.Add(NewSnapshot);
+	//UE_LOG(LogTemp, Warning, TEXT("Added Snapshot: %s"), NewSnapshot->GetName());
+}
+
 const void APS_Player::SetGMSpawnZoneTimeInterval()
 {
 	GM_Reference = Cast<AGM_TimeArena>(GetWorld()->GetAuthGameMode());

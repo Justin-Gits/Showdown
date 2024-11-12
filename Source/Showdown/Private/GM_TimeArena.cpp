@@ -4,6 +4,7 @@
 //Custom Classes
 #include "GM_TimeArena.h"
 #include "GS_TimeArena.h"
+#include "PS_Player.h"
 #include "PC_Player.h"
 #include "ENUM_TimeArena.h"
 #include "CHAR_Player.h"
@@ -55,6 +56,8 @@ void AGM_TimeArena::StartGame()
 	}
 }
 
+
+
 void AGM_TimeArena::AssignTeam()
 {
 	// TODO: The team assignment is crudely hard coded in, later I should make this modular for multiple players. 
@@ -79,6 +82,12 @@ void AGM_TimeArena::CreateSnapshotSpawnPoint(APC_Player* PlayerReference)
 	UWorld* const World_Reference = GetWorld();
 	if (World_Reference != nullptr)
 	{
+		//Player State Information
+		APS_Player* PlayerStateReference = Cast<APS_Player>(PlayerReference->PlayerState);
+
+
+		//Player Character Information
+		
 		ACHAR_Player* CHAR_Reference = PlayerReference->GetActiveCharacter();
 		if (CHAR_Reference == nullptr)
 		{
@@ -104,8 +113,9 @@ void AGM_TimeArena::CreateSnapshotSpawnPoint(APC_Player* PlayerReference)
 		ACHAR_Player* SnapshotSpawn = World_Reference->SpawnActor<ACHAR_Player>(SnapshotSpawnBPClass, SnapshotSpawnLocation, SnapshotSpawnRotation, SnapshotSpawnParameters);
 		SnapshotSpawn->RequestSetAdditionalSpawnParameters(SnapshotSpawnVelocity, SnapshotSpawnHealth, SnapshotSpawnAmmo);
 
-		// TODO:  Initialize the rest of the snapshot spawn parameters: Health, Ammo, Velocity.  See checkin v.20 from main branch for info.
-
+		//Add Snapshot to Player State Array
+		PlayerStateReference->RequestAddToSnapshotArray(SnapshotSpawn);
+		PlayerStateReference->DebugSpawnArrayPrintout();
 		// TODO:  I need to start tracking the player spawns in some sort of array. 
 
 

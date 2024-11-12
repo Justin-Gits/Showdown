@@ -8,6 +8,7 @@
 
 class AGS_TimeArena;
 class ACHAR_Player;
+class APS_Player;
 
 UCLASS()
 class SHOWDOWN_API AGM_TimeArena : public AGameMode
@@ -35,6 +36,7 @@ virtual void Logout(AController* ExitingController) override;
 
 UFUNCTION(Exec)
 void StartGame();
+
 
 UFUNCTION(BlueprintCallable, Category = "Game Setup")
 void AssignTeam();

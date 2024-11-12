@@ -7,6 +7,7 @@
 #include "GS_TimeArena.h"
 #include "PS_Player.generated.h"
 
+class ACHAR_Player;
 class AGS_TimeArena;
 class AGM_TimerArena;
 class APC_Player;
@@ -29,10 +30,20 @@ public:
 	
 	UFUNCTION()
 	void BeginSpawnTimers();
+
+	UFUNCTION()
+	void RequestAddToSnapshotArray(ACHAR_Player* NewSnapshot);
+
+	UFUNCTION()
+	void RequestSpawnArrayPrintout();
 	
-
-
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Properties")
+	TArray<ACHAR_Player*> SnapshotCharacterArray;
+	
+	UFUNCTION()
+	void AddToSnapshotArray(ACHAR_Player* NewSnapshot);
+
 	AGS_TimeArena* GS_Reference;
 	AGM_TimeArena* GM_Reference;
 	APC_Player* PC_Reference;
