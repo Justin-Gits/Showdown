@@ -102,6 +102,7 @@ void AGM_TimeArena::CreateSnapshotSpawnPoint(APC_Player* PlayerReference)
 		ensureMsgf(SnapshotSpawnBPClass != nullptr, TEXT("SnapshotSpawnBPClass is not initialized in UE Editor"));
 		if (SnapshotSpawnBPClass == nullptr) { return; }
 		ACHAR_Player* SnapshotSpawn = World_Reference->SpawnActor<ACHAR_Player>(SnapshotSpawnBPClass, SnapshotSpawnLocation, SnapshotSpawnRotation, SnapshotSpawnParameters);
+		SnapshotSpawn->RequestSetAdditionalSpawnParameters(SnapshotSpawnVelocity, SnapshotSpawnHealth, SnapshotSpawnAmmo);
 
 		// TODO:  Initialize the rest of the snapshot spawn parameters: Health, Ammo, Velocity.  See checkin v.20 from main branch for info.
 

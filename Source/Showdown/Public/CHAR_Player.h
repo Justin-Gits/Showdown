@@ -79,7 +79,6 @@ public:
 #pragma endregion
 
 #pragma region Weapon Firing Mechanics
-protected:
 
 public:
 	void RequestFireWeapon();
@@ -93,6 +92,22 @@ public:
 	void MulticastSnapshotPossessionEvent();
 
 	virtual void PossessedBy(AController* NewController) override;
+
+#pragma endregion
+
+#pragma region Snapshot Spawn Points
+public:
+	void RequestSetAdditionalSpawnParameters(FVector InputVelocity, float InputHealth, float InputAmmo);
+protected:
+	UFUNCTION()
+	void SetAdditionalSpawnParameters(FVector InputVelocity, float InputHealth, float InputAmmo);
+
+	UPROPERTY()
+	FVector SnapshotVelocity;
+
+	UPROPERTY()
+	float SnapshotAmmo;
+
 
 #pragma endregion
 

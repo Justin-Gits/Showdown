@@ -182,6 +182,34 @@ void ACHAR_Player::PossessedBy(AController* NewController)
 
 #pragma endregion
 
+#pragma region Snapshot Spawn Points
+
+void ACHAR_Player::RequestSetAdditionalSpawnParameters(FVector InputVelocity, float InputHealth, float InputAmmo)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		SetAdditionalSpawnParameters(InputVelocity, InputHealth, InputAmmo);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ACHAR_Player::RequestSetAdditionalSpawnParameters - Lacks authority to make this request"));
+	}
+}
+
+void ACHAR_Player::SetAdditionalSpawnParameters(FVector InputVelocity, float InputHealth, float InputAmmo)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		CurrentHealth = InputHealth;
+		SnapshotVelocity = InputVelocity;
+		SnapshotAmmo = InputAmmo;
+		UE_LOG(LogTemp, Warning, TEXT(" ACHAR_Player::SetAdditionalSpawnParameters - Health = %f, Ammo = %f"), CurrentHealth, SnapshotAmmo);
+
+	}
+}
+
+#pragma endregion
+
 
 
 
