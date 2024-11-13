@@ -47,6 +47,7 @@ void APC_Player::BeginPlay()
 void APC_Player::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+	//PossessingCharacter = true;
 	ActiveCharacter = Cast<ACHAR_Player>(InPawn);
 	ensureMsgf(ActiveCharacter != nullptr, TEXT("APC_Player::OnPossess - Active Character = nullptr"));
 	if (GetLocalRole() == ROLE_Authority)
@@ -59,6 +60,7 @@ void APC_Player::OnPossess(APawn* InPawn)
 void APC_Player::OnUnPossess()
 {
 	Super::OnUnPossess();
+	//PossessingCharacter = false;
 	UE_LOG(LogTemp, Warning, TEXT("APC_Player::OnUnPossess() - Controller no longer possessing an actor."));
 	if (IsLocalController())
 	{
@@ -138,7 +140,10 @@ ACHAR_Player* APC_Player::GetActiveCharacter()
 			return ActiveCharacter;
 		}
 	}
-	return ActiveCharacter;
+	else 
+	{
+		return ActiveCharacter;
+	}
 }
 
 UCMC_Player* APC_Player::GetCustomCharacterMovementComponent()
@@ -151,50 +156,64 @@ UCMC_Player* APC_Player::GetCustomCharacterMovementComponent()
 
 #pragma region Character Movement and Actions
 
+bool APC_Player::PossessingCharacter()
+{
+	if (IsLocalController())
+	{
+		if (GetCharacter() == nullptr)
+		{
+			return false;
+		}
+		else 
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void APC_Player::RequestMove(const FInputActionValue& Value)
 {
-	CheckActiveCharacter();
-	if (ActiveCharacter == nullptr)
+	if (PossessingCharacter())
 	{
-		return;
-	}
-	else
-	{
+		ActiveCharacter = GetActiveCharacter();
 		FVector2D MovementVector = Value.Get<FVector2D>();
-
 		FRotator const ControlSpaceRot = GetControlRotation();
 		ActiveCharacter->AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::X), MovementVector.X);
 		ActiveCharacter->AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::Y), MovementVector.Y);
+	}
+	else
+	{
+		return;
 	}
 }
 
 void APC_Player::RequestLook(const FInputActionValue& Value)
 {
-	CheckActiveCharacter();
-	if (ActiveCharacter == nullptr)
+	if (PossessingCharacter())
 	{
-		return;
-	}
-	else
-	{
+		ActiveCharacter = GetActiveCharacter();
 		FVector2D LookAxisVector = Value.Get<FVector2D>();
 		ActiveCharacter->AddControllerYawInput(LookAxisVector.X);
 		ActiveCharacter->AddControllerPitchInput(-1.0f * LookAxisVector.Y);
+	}
+	else
+	{
+		return;
 	}
 }
 
 void APC_Player::RequestJump()
 {
-	CheckActiveCharacter();
-	if (ActiveCharacter == nullptr)
+	if (PossessingCharacter())
 	{
-		return;
+		ActiveCharacter = GetActiveCharacter();
+		ActiveCharacter->Jump();
 	}
 	else
 	{
-		ActiveCharacter->Jump();
+		return;
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("APC_Network_Multiplayer::RequestJump Executed"));
 }
 
 void APC_Player::RequestSprintStart()
@@ -213,14 +232,9 @@ void APC_Player::RequestSprintStop()
 
 void APC_Player::RequestToggleCrouch()
 {
-	CheckActiveCharacter();	
-	
-	if (ActiveCharacter == nullptr)
+	if (PossessingCharacter())
 	{
-		return;
-	}
-	else
-	{
+		ActiveCharacter = GetActiveCharacter();
 		if (ActiveCharacter->bIsCrouched)
 		{
 			ActiveCharacter->UnCrouch();
@@ -230,50 +244,46 @@ void APC_Player::RequestToggleCrouch()
 			ActiveCharacter->Crouch();
 		}
 	}
+	else
+	{
+		return;
+	}
 }
 
 void APC_Player::RequestDamageSelf()							// TODO:  Should remove this debug functionality prior to game release. 
 {
-	ACHAR_Player* TargetCharacter = GetActiveCharacter();
-	if (ActiveCharacter == nullptr)
+	if (PossessingCharacter())
 	{
-		return;
-	}
-	else
-	{
+		ActiveCharacter = GetActiveCharacter();
 		float DamageAmount = 10.0f;
 		APC_Player* InstigatingPlayer = this;
 		if (HasAuthority())
 		{
-			UGameplayStatics::ApplyDamage(TargetCharacter, DamageAmount, this, TargetCharacter, UDamageType::StaticClass());
+			UGameplayStatics::ApplyDamage(ActiveCharacter, DamageAmount, this, ActiveCharacter, UDamageType::StaticClass());
 		}
 		else
 		{
-			ServerDamageSelf(TargetCharacter, DamageAmount, InstigatingPlayer);
+			ServerDamageSelf(ActiveCharacter, DamageAmount, InstigatingPlayer);
 		}
+	}
+	else
+	{
+		return;
 	}
 }
 
 void APC_Player::RequestFireWeapon()
 {
-	CheckActiveCharacter();
-	if (ActiveCharacter == nullptr)
+	if (PossessingCharacter())
 	{
-		return;
+		ActiveCharacter = GetActiveCharacter();
+		ActiveCharacter->RequestFireWeapon();
 	}
 	else
 	{
-		ActiveCharacter->RequestFireWeapon();
+		return;
 	}
 }
-
-//void APC_Player::ListenerOnDestroyed(AActor* DestroyedActor)
-//{
-//	
-//	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ListenerOnDestroyed - Actor Destroyed."));
-//	UpdateHUD = false;
-//	DestroyHUDWidget();
-//}
 
 #pragma endregion
 

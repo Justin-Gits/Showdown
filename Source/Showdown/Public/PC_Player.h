@@ -66,6 +66,9 @@ public:
 #pragma endregion
 
 #pragma region Getter and Checker Functions
+public:
+
+
 protected:
 	void CheckActiveCharacter();													//Checker function needed for PIE, used when switiching between windows.  ActiveCharacter becomes a nullptr when a window switch occurs. 
 
@@ -80,6 +83,8 @@ public:
 #pragma region Movement Functions and Properties
 protected:
 	//Movement and Action Functions
+	UFUNCTION(BlueprintCallable, Category = "PC_Player")
+	bool PossessingCharacter();
 	void RequestMove(const FInputActionValue& Value);
 	void RequestLook(const FInputActionValue& Value);
 	void RequestJump();
