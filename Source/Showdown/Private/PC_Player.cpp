@@ -53,7 +53,18 @@ void APC_Player::OnPossess(APawn* InPawn)
 	{
 		ClientConstructHUDWidget();
 	}
-	ActiveCharacter->OnDestroyed.AddDynamic(this, &APC_Player::ListenerOnDestroyed);
+	//ActiveCharacter->OnDestroyed.AddDynamic(this, &APC_Player::ListenerOnDestroyed);
+}
+
+void APC_Player::OnUnPossess()
+{
+	Super::OnUnPossess();
+	UE_LOG(LogTemp, Warning, TEXT("APC_Player::OnUnPossess() - Controller no longer possessing an actor."));
+	if (IsLocalController())
+	{
+		UpdateHUD = false;
+		DestroyHUDWidget();
+	}
 }
 
 void APC_Player::DelayedEIBinding()
@@ -118,6 +129,14 @@ ACHAR_Player* APC_Player::GetActiveCharacter()
 {
 	if (ActiveCharacter == nullptr) {
 		ActiveCharacter = Cast<ACHAR_Player>(GetCharacter());
+		if (ActiveCharacter == nullptr)
+		{
+			return nullptr;
+		}
+		else
+		{
+			return ActiveCharacter;
+		}
 	}
 	return ActiveCharacter;
 }
@@ -139,13 +158,14 @@ void APC_Player::RequestMove(const FInputActionValue& Value)
 	{
 		return;
 	}
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	else
+	{
+		FVector2D MovementVector = Value.Get<FVector2D>();
 
-	FRotator const ControlSpaceRot = GetControlRotation();
-	ActiveCharacter->AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::X), MovementVector.X);
-	ActiveCharacter->AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::Y), MovementVector.Y);
-
-	//UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestMove - Executed"));
+		FRotator const ControlSpaceRot = GetControlRotation();
+		ActiveCharacter->AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::X), MovementVector.X);
+		ActiveCharacter->AddMovementInput(FRotationMatrix(ControlSpaceRot).GetScaledAxis(EAxis::Y), MovementVector.Y);
+	}
 }
 
 void APC_Player::RequestLook(const FInputActionValue& Value)
@@ -155,18 +175,26 @@ void APC_Player::RequestLook(const FInputActionValue& Value)
 	{
 		return;
 	}
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-	ActiveCharacter->AddControllerYawInput(LookAxisVector.X);
-	ActiveCharacter->AddControllerPitchInput(-1.0f*LookAxisVector.Y);
-
-	//UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestLook - Executed:"));
+	else
+	{
+		FVector2D LookAxisVector = Value.Get<FVector2D>();
+		ActiveCharacter->AddControllerYawInput(LookAxisVector.X);
+		ActiveCharacter->AddControllerPitchInput(-1.0f * LookAxisVector.Y);
+	}
 }
 
 void APC_Player::RequestJump()
 {
 	CheckActiveCharacter();
+	if (ActiveCharacter == nullptr)
+	{
+		return;
+	}
+	else
+	{
+		ActiveCharacter->Jump();
+	}
 	//UE_LOG(LogTemp, Warning, TEXT("APC_Network_Multiplayer::RequestJump Executed"));
-	ActiveCharacter->Jump();
 }
 
 void APC_Player::RequestSprintStart()
@@ -186,43 +214,66 @@ void APC_Player::RequestSprintStop()
 void APC_Player::RequestToggleCrouch()
 {
 	CheckActiveCharacter();	
-	if (ActiveCharacter->bIsCrouched)
+	
+	if (ActiveCharacter == nullptr)
 	{
-		ActiveCharacter->UnCrouch();
+		return;
 	}
 	else
 	{
-		ActiveCharacter->Crouch();
+		if (ActiveCharacter->bIsCrouched)
+		{
+			ActiveCharacter->UnCrouch();
+		}
+		else
+		{
+			ActiveCharacter->Crouch();
+		}
 	}
 }
 
 void APC_Player::RequestDamageSelf()							// TODO:  Should remove this debug functionality prior to game release. 
 {
 	ACHAR_Player* TargetCharacter = GetActiveCharacter();
-	float DamageAmount = 10.0f;
-	APC_Player* InstigatingPlayer = this;
-//	UGameplayStatics::ApplyDamage(TargetCharacter, DamageAmount, this, TargetCharacter, UDamageType::StaticClass());
-	if (HasAuthority())
+	if (ActiveCharacter == nullptr)
 	{
-		UGameplayStatics::ApplyDamage(TargetCharacter, DamageAmount, this, TargetCharacter, UDamageType::StaticClass());
+		return;
 	}
 	else
 	{
-		ServerDamageSelf(TargetCharacter, DamageAmount, InstigatingPlayer);				
+		float DamageAmount = 10.0f;
+		APC_Player* InstigatingPlayer = this;
+		if (HasAuthority())
+		{
+			UGameplayStatics::ApplyDamage(TargetCharacter, DamageAmount, this, TargetCharacter, UDamageType::StaticClass());
+		}
+		else
+		{
+			ServerDamageSelf(TargetCharacter, DamageAmount, InstigatingPlayer);
+		}
 	}
-	
 }
 
 void APC_Player::RequestFireWeapon()
 {
 	CheckActiveCharacter();
-	ActiveCharacter->RequestFireWeapon();
+	if (ActiveCharacter == nullptr)
+	{
+		return;
+	}
+	else
+	{
+		ActiveCharacter->RequestFireWeapon();
+	}
 }
 
-void APC_Player::ListenerOnDestroyed(AActor* DestroyedActor)
-{
-	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ListenerOnDestroyed - Actor Destroyed."));
-}
+//void APC_Player::ListenerOnDestroyed(AActor* DestroyedActor)
+//{
+//	
+//	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ListenerOnDestroyed - Actor Destroyed."));
+//	UpdateHUD = false;
+//	DestroyHUDWidget();
+//}
 
 #pragma endregion
 
@@ -241,6 +292,11 @@ void APC_Player::ClientConstructHUDWidget_Implementation()
 void APC_Player::ConstructHUDWidget_Implementation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ConstructHUDWidget_Implementation() - Default Implementation Occurred for this Blueprint Native Event."));
+}
+
+void APC_Player::DestroyHUDWidget_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("APC_Player:::DestroyHUDWidget_Implementation() - Default Implementation Occurred for this Blueprint Native Event."));
 }
 
 void APC_Player::SetHealthBarPercentage_Implementation()

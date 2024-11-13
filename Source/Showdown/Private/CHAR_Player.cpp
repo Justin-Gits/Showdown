@@ -76,15 +76,19 @@ void ACHAR_Player::OnHealthUpdate()
 	//Client Functionality
 	if (IsLocallyControlled())
 	{
-		ReferencePlayer->SetHealthBarPercentage();
-		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
-
-		//if (CurrentHealth <= 0.0f)
-		//{
-		//	FString deathMessage = FString::Printf(TEXT("You have perished."), CurrentHealth);
-		//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
-		//}
+		if (CurrentHealth <= 0.0f)
+		{
+			ReferencePlayer->UpdateHUD = false;
+			ServerDestroyCharacter(ReferencePlayer);
+			//FString deathMessage = FString::Printf(TEXT("You have perished."), CurrentHealth);
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+		}
+		else
+		{
+			ReferencePlayer->SetHealthBarPercentage();
+			FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+		}
 	}
 
 	//Server Functionality
@@ -99,14 +103,13 @@ void ACHAR_Player::OnHealthUpdate()
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
 			ReferencePlayer->UpdateHUD = false;
 			Destroy();
-
-			// TODO:  Create RPC to destroy this actor if it doesn't occur on the listen server.  Also replicate the UpdateHUD bool or find a workaround. 
-
-			//ServerDestroyCharacter(this);
-			// Request Destroy(ReferenceCharacter). 
-			//ReferencePlayer->RequestRespawn();
 		}
 	}
+}
+
+void ACHAR_Player::ServerDestroyCharacter_Implementation(APC_Player* TargetPlayer)
+{
+	Destroy();
 }
 
 float ACHAR_Player::GetCurrentHealthPercentage() const

@@ -46,7 +46,7 @@ void USMC_BaseWeapon::FireWeapon(ACHAR_Player* RequestingCharacter)
 		return;
 	}
 
-	if (BulletProjectileClass != nullptr)
+	else if (BulletProjectileClass != nullptr)
 	{
 		//Try to fire a projectile
 		UWorld* const World = GetWorld();

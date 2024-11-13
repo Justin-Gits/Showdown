@@ -54,6 +54,9 @@ protected:
 	void OnRep_CurrentHealth();
 	UFUNCTION()
 	void OnHealthUpdate();		//Response to health being updated.  Called on the server immediately after modification, and on clients in response to receiving an update. 
+	UFUNCTION(Server, Reliable)
+	void ServerDestroyCharacter(APC_Player* TargetPlayer);
+
 
 public:
 	

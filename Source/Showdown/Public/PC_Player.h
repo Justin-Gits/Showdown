@@ -38,6 +38,7 @@ protected:
 	FTimerHandle EnhancedInputTimer;												//Sets timers for binding player inputs
 
 	virtual void OnPossess(APawn* InPawn) override;									//OnPossess- Adds additional functionality
+	virtual void OnUnPossess() override;
 	void DelayedEIBinding();
 
 #pragma region Enhanced Input Bindings
@@ -104,6 +105,9 @@ protected:
 	UFUNCTION(BlueprintNativeEvent, Category="HUD")									//BP NATIVE: Builds the HUD and assigns it to the player's viewport. 
 	void ConstructHUDWidget();
 
+	UFUNCTION(BlueprintNativeEvent, Category="HUD")
+	void DestroyHUDWidget();
+
 public:
 	UPROPERTY(BlueprintReadOnly)
 	bool UpdateHUD = true;
@@ -133,7 +137,7 @@ protected:
 	UEnhancedInputLocalPlayerSubsystem* PlayerSubsystem = nullptr;
 
 	//Test Listener Function
-	UFUNCTION()
-	void ListenerOnDestroyed(AActor* DestroyedActor);
+	//UFUNCTION()
+	//void ListenerOnDestroyed(AActor* DestroyedActor);
 
 };
