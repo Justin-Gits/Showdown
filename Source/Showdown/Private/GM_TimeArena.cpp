@@ -72,6 +72,11 @@ void AGM_TimeArena::AssignTeam()
 	
 
 }
+void AGM_TimeArena::PossessCharacterUsingPlayer(ACHAR_Player* TargetCharacter, APC_Player* TargetController)
+{
+	TargetController->Possess(TargetCharacter);
+	UE_LOG(LogTemp, Warning, TEXT("AGM_TimeArena::PossessCharacterUsingPlayer - Executed"));
+}
 void AGM_TimeArena::RequestSnapshotSpawn(APC_Player* PlayerReference)
 {
 	CreateSnapshotSpawnPoint(PlayerReference);

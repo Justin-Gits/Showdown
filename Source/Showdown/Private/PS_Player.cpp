@@ -3,6 +3,7 @@
 
 //Custom Classes
 #include "PS_Player.h"
+#include "CHAR_Player.h"
 #include "PC_Player.h"
 #include "GM_TimeArena.h"
 //Engine Functionality
@@ -56,10 +57,57 @@ void APS_Player::DebugSpawnArrayPrintout()
 	UE_LOG(LogTemp, Warning, TEXT("SpawnableCharacters[%d]"), SnapshotCharacterArray.Num());
 }
 
+ACHAR_Player* APS_Player::GetSnapshotSpawn()
+{
+	if (HasAuthority())
+	{
+		//Get snapshot information
+		if (SnapshotCharacterArray.Num() <= 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("APS_Player::GetSnapshotSpawn - No Spawns Available, You Lose :("));
+			return nullptr;
+		}
+		else
+		{
+			LatestSnapshot = SnapshotCharacterArray.Last();
+			SnapshotCharacterArray.Pop();
+			return LatestSnapshot;
+		}
+	}
+	else
+	{
+		if (SnapshotCharacterArray.Num() <= 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("APS_Player::GetSnapshotSpawn - No Spawns Available, You Lose :("));
+			return nullptr;
+		}
+		else
+		{
+			LatestSnapshot = SnapshotCharacterArray.Last();
+			ServerGetSnapshotSpawn(LatestSnapshot);
+			return LatestSnapshot;
+		}
+	}
+}
+
 void APS_Player::AddToSnapshotArray(ACHAR_Player* NewSnapshot)
 {
-	SnapshotCharacterArray.Add(NewSnapshot);
-	//UE_LOG(LogTemp, Warning, TEXT("Added Snapshot: %s"), NewSnapshot->GetName());
+	if (HasAuthority())
+	{
+		SnapshotCharacterArray.Add(NewSnapshot);
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::AddToSnapshotArray - Added Snapshot: %s"), *NewSnapshot->GetName());
+		//Debug, name out snapshots
+		int PrintingLength = SnapshotCharacterArray.Num();
+		for (int i = 0; i < PrintingLength; i++)
+		{
+			FString SnapshotName = NewSnapshot->GetName();
+			UE_LOG(LogTemp, Warning, TEXT("APS_Player:: AddToSnapshotArray: entry %d = %s"), i, *SnapshotName);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::AddToSnapshotArray - Lacked Authority to add snapshot"));
+	}
 }
 
 const void APS_Player::SetGMSpawnZoneTimeInterval()
@@ -71,10 +119,10 @@ const void APS_Player::SetGMSpawnZoneTimeInterval()
 
 void APS_Player::CreateSnapshotSpawn()
 {
-	PC_Reference = Cast<APC_Player>(GetPlayerController());
-	UE_LOG(LogTemp, Warning, TEXT("APS_Player::CreateSnapshotSpawn() - Created Snapshot Spawn"));
 	if (HasAuthority())
 	{
+		PC_Reference = Cast<APC_Player>(GetPlayerController());
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::CreateSnapshotSpawn() - Created Snapshot Spawn"));
 		GM_Reference->RequestSnapshotSpawn(PC_Reference);
 	}
 	if (GMEnableSnapshotSpawns == true)
@@ -84,6 +132,35 @@ void APS_Player::CreateSnapshotSpawn()
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("APS_Player::CreateSnapshotSpawn() - Further Snapshot Spawns Disabled, Check EnableSnapshotSpawns parameter in UE UI"));
+	}
+}
+
+void APS_Player::ServerGetSnapshotSpawn_Implementation(ACHAR_Player* TargetSnapshot)
+{
+	SnapshotCharacterArray.Pop();
+	
+}
+
+bool APS_Player::ServerGetSnapshotSpawn_Validate(ACHAR_Player* TargetSnapshot)
+{
+	if (SnapshotCharacterArray.Last() == TargetSnapshot)
+	{
+		//Client's latest snapshot matches server snapshot
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::ServerGetSnapshotSpawn_Validate - Client and Server match"));
+		return true;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::ServerGetSnapshotSpawn_Validate - Client and Server MISMATCH."));
+		return false;
+	}
+}
+void APS_Player::ClientGetSnapshotSpawn_Implementation(const TArray<ACHAR_Player*>& ServerCharacterArray)
+{
+	if (ServerCharacterArray != SnapshotCharacterArray)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::ClientGetSnapshotSpawn - Server and Client Snapshot Arrays do not match, fixing."));
+		SnapshotCharacterArray = ServerCharacterArray;
 	}
 }
 #pragma endregion

@@ -73,37 +73,53 @@ UCMC_Player* ACHAR_Player::GetCMC_Player() const
 void ACHAR_Player::OnHealthUpdate()
 {
 	APC_Player* ReferencePlayer = Cast<APC_Player>(GetController());
-	//Client Functionality
-	if (IsLocallyControlled())
+	if (ReferencePlayer != nullptr)
 	{
-		if (CurrentHealth <= 0.0f)
+		//Host - Everything needs to happen (HUD Update + Character update)
+		if (ReferencePlayer->GetLocalRole() == ROLE_Authority)
 		{
-			ReferencePlayer->UpdateHUD = false;
-			ServerDestroyCharacter(ReferencePlayer);
-			//FString deathMessage = FString::Printf(TEXT("You have perished."), CurrentHealth);
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
-		}
-		else
-		{
+			//Everything needs to happen. The HUD needs to be updated and the character needs to take damage.
 			ReferencePlayer->SetHealthBarPercentage();
-			FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+			if (CurrentHealth <= 0.0f)
+			{
+				FString deathMessage = FString::Printf(TEXT("You have perished."));
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+				ReferencePlayer->UpdateHUD = false;
+				ReferencePlayer->DestroyPossessedCharacter(this);
+				//Destroy();
+				//Tell the PC player to destroy the pawn. 
+			}
 		}
-	}
-
-	//Server Functionality
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
-
-		if (CurrentHealth <= 0.0f)
+		
+		//Character client controls
+		else if (GetLocalRole() == ROLE_SimulatedProxy)
 		{
-			FString deathMessage = FString::Printf(TEXT("You have perished."));
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
-			ReferencePlayer->UpdateHUD = false;
-			Destroy();
+			if (CurrentHealth <= 0.0f)
+			{
+				ReferencePlayer->UpdateHUD = false;
+				ServerDestroyCharacter(ReferencePlayer);
+			}
+			else
+			{
+				ReferencePlayer->SetHealthBarPercentage();
+			}
 		}
+		
+	//	else if (GetLocalRole() == ROLE_AutonomousProxy)
+	//	{
+	//		if (CurrentHealth <= 0.0f)
+	//		{
+	//			ReferencePlayer->UpdateHUD = false;
+	//			ServerDestroyCharacter(ReferencePlayer);
+	//		}
+	//		else
+	//		{
+	//			ReferencePlayer->SetHealthBarPercentage();
+	//			FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
+	//			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+	//		}
+	//	}
+		
 	}
 }
 

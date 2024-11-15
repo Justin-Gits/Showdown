@@ -11,6 +11,7 @@
 
 
 class AGM_TimeArena;
+class APS_Player;
 class UInputAction;
 class UEnhancedInputLocalPlayerSubsystem;
 class UCMC_Player;
@@ -26,19 +27,11 @@ public:
 	
 	friend class AGM_TimeArena;
 
-	UFUNCTION(Server, Reliable, BlueprintCallable)									//Request to spawn character - Server RPC
-	void ServerRequestSpawnCharacter();
-
-	void ServerRequestSpawnCharacter_Implementation();								//Request to spawn character - Implementation
-
 	
 protected:
 	virtual void BeginPlay() override;
 
 	FTimerHandle EnhancedInputTimer;												//Sets timers for binding player inputs
-
-	virtual void OnPossess(APawn* InPawn) override;									//OnPossess- Adds additional functionality
-	virtual void OnUnPossess() override;
 	void DelayedEIBinding();
 
 #pragma region Enhanced Input Bindings
@@ -83,8 +76,6 @@ public:
 #pragma region Movement Functions and Properties
 protected:
 	//Movement and Action Functions
-	UFUNCTION(BlueprintCallable, Category = "PC_Player")
-	bool PossessingCharacter();
 	void RequestMove(const FInputActionValue& Value);
 	void RequestLook(const FInputActionValue& Value);
 	void RequestJump();
@@ -100,12 +91,34 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Look")
 	float BaseLookRightRate = 90.0f;
 public:
+
+	UFUNCTION(BlueprintCallable, Category = "PC_Player")
+	void DestroyPossessedCharacter(ACHAR_Player* TargetCharacter);
+#pragma endregion
+
+#pragma region Possession
+protected:
+	//Overrides
+	virtual void OnPossess(APawn* InPawn) override;									//OnPossess- Adds additional functionality
+	virtual void OnUnPossess() override;
+
+	//Custom Functions
+	UFUNCTION(BlueprintCallable, Category = "PC_Player")
+	bool PossessingCharacter();
+	UFUNCTION(BlueprintCallable, Category = "PC_Player")
+	void RequestSearchForSnapshot();
+	void ExecuteSearchForSnapshot();
+	
+
+
+	//References
+	APS_Player* ReferencePlayerState;
+
+
 #pragma endregion
 	
 #pragma region HUD
 protected:
-	UFUNCTION(Client, Reliable)														//Client RPC - Tells client to call ConstructHUDWidget Function
-	void ClientConstructHUDWidget();
 	
 	UFUNCTION(BlueprintNativeEvent, Category="HUD")									//BP NATIVE: Builds the HUD and assigns it to the player's viewport. 
 	void ConstructHUDWidget();
@@ -124,9 +137,21 @@ public:
 
 
 #pragma region RPCs
+public:
+	UFUNCTION(Server, Reliable, BlueprintCallable)									//Request to spawn character - Server RPC
+	void ServerRequestSpawnCharacter();
+
 	UFUNCTION(Server, Reliable)
 	void ServerDamageSelf(ACHAR_Player* TargetCharacter, float DamageAmount, APC_Player* InstigatingPlayer);
 
+	UFUNCTION(Server, Reliable)
+	void ServerRequestSearchForSnapshot();
+
+	UFUNCTION(Client, Reliable)														//Client RPC - Tells client to call ConstructHUDWidget Function
+	void ClientConstructHUDWidget();
+
+	UFUNCTION(Client, Reliable)
+	void ClientDestroyHUDWidget();
 
 #pragma endregion
 

@@ -2,6 +2,7 @@
 
 
 #include "PC_Player.h"
+#include "PS_Player.h"
 #include "GM_TimeArena.h"
 #include "CHAR_Player.h"
 #include "CMC_Player.h"
@@ -16,20 +17,6 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-
-
-void APC_Player::ServerRequestSpawnCharacter_Implementation()
-{
-	//Ensure that we are on the server:
-	if (HasAuthority())
-	{
-		AGM_TimeArena* CurrentGameMode = Cast<AGM_TimeArena>(GetWorld()->GetAuthGameMode());
-		if (CurrentGameMode)
-		{
-			CurrentGameMode->SpawnCharacterForPlayer(this);
-		}
-	}
-}
 
 
 void APC_Player::BeginPlay()
@@ -47,27 +34,95 @@ void APC_Player::BeginPlay()
 void APC_Player::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	//PossessingCharacter = true;
+	UE_LOG(LogTemp, Warning, TEXT("APC_Player::OnPossess - Possession Occurred."));
 	ActiveCharacter = Cast<ACHAR_Player>(InPawn);
 	ensureMsgf(ActiveCharacter != nullptr, TEXT("APC_Player::OnPossess - Active Character = nullptr"));
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		ClientConstructHUDWidget();
+		if (IsLocalController())
+		{
+			ConstructHUDWidget();
+		}
+		else
+		{
+			ClientConstructHUDWidget();
+		}
 	}
-	//ActiveCharacter->OnDestroyed.AddDynamic(this, &APC_Player::ListenerOnDestroyed);
 }
 
 void APC_Player::OnUnPossess()
 {
 	Super::OnUnPossess();
-	//PossessingCharacter = false;
-	UE_LOG(LogTemp, Warning, TEXT("APC_Player::OnUnPossess() - Controller no longer possessing an actor."));
-	if (IsLocalController())
+	//ServerRequestSpawnCharacter();
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		UpdateHUD = false;
-		DestroyHUDWidget();
+		if (IsLocalController())
+		{
+			UpdateHUD = false;
+			DestroyHUDWidget();
+			UE_LOG(LogTemp, Warning, TEXT("APC_Player::OnUnPossess() - Host no longer possess a controller."));
+			RequestSearchForSnapshot();
+		}
+		else
+		{
+			UpdateHUD = false;
+			ClientDestroyHUDWidget();
+			//Need to update with client side logic once we get host logic to work. 
+		}
+
 	}
 }
+
+void APC_Player::RequestSearchForSnapshot()
+{
+	UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestSearchForSnapshot - Executing."));
+	if (IsLocalController())
+	{
+		//ServerRequestSpawnCharacter();
+
+		if (HasAuthority())
+		{
+			ExecuteSearchForSnapshot();
+		}
+		else
+		{
+			ServerRequestSearchForSnapshot();
+		}
+	}
+	//If it isn't a local controller, then do nothing. 
+}
+
+void APC_Player::ExecuteSearchForSnapshot()
+{
+	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ExecuteSearchForSnapshot - Executing."));
+	ReferencePlayerState = GetPlayerState<APS_Player>();
+	ACHAR_Player* NextSpawn = ReferencePlayerState->GetSnapshotSpawn();
+	if (NextSpawn == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("APC_Player::ExecuteSearchForSnapshot - NextSpawn = nullptr!"));
+	}
+	else
+	{
+		FString NextSpawnName = NextSpawn->GetName();
+		UE_LOG(LogTemp, Warning, TEXT("Next Spawn Name: %s"), *NextSpawnName);
+		UpdateHUD = true;
+		if (GetPawn())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Player controller already possesses something else, unpossessing now!"));
+			UnPossess();
+		}
+		GameModeRef->PossessCharacterUsingPlayer(NextSpawn, this);
+	}
+
+}
+
+void APC_Player::DestroyPossessedCharacter(ACHAR_Player* TargetCharacter)
+{
+	UnPossess();
+	TargetCharacter->Destroy();
+}
+
+
 
 void APC_Player::DelayedEIBinding()
 {
@@ -176,6 +231,7 @@ void APC_Player::RequestMove(const FInputActionValue& Value)
 {
 	if (PossessingCharacter())
 	{
+//		UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestMove - Has Occurred."));
 		ActiveCharacter = GetActiveCharacter();
 		FVector2D MovementVector = Value.Get<FVector2D>();
 		FRotator const ControlSpaceRot = GetControlRotation();
@@ -289,16 +345,6 @@ void APC_Player::RequestFireWeapon()
 
 #pragma region HUD
 
-void APC_Player::ClientConstructHUDWidget_Implementation()
-{
-	ensureMsgf(IsLocalController() == true, TEXT("APC_Player::ClientConstructHUDWidget_Implementation() - Still isn't a local player controller..."));
-	if (IsLocalController())
-	{
-		ConstructHUDWidget();
-	}
-}
-
-
 void APC_Player::ConstructHUDWidget_Implementation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ConstructHUDWidget_Implementation() - Default Implementation Occurred for this Blueprint Native Event."));
@@ -317,24 +363,44 @@ void APC_Player::SetHealthBarPercentage_Implementation()
 #pragma endregion
 
 #pragma region RPCs
+void APC_Player::ServerRequestSpawnCharacter_Implementation()
+{
+	//Ensure that we are on the server:
+	if (HasAuthority())
+	{
+		AGM_TimeArena* CurrentGameMode = Cast<AGM_TimeArena>(GetWorld()->GetAuthGameMode());
+		if (CurrentGameMode)
+		{
+			CurrentGameMode->SpawnCharacterForPlayer(this);
+		}
+	}
+}
+
 void APC_Player::ServerDamageSelf_Implementation(ACHAR_Player* TargetCharacter, float DamageAmount, APC_Player* InstigatingPlayer)
 {
 	UGameplayStatics::ApplyDamage(TargetCharacter, DamageAmount, this, TargetCharacter, UDamageType::StaticClass());
 }
 
+void APC_Player::ServerRequestSearchForSnapshot_Implementation()
+{
+	ExecuteSearchForSnapshot();
+}
+
+
+void APC_Player::ClientConstructHUDWidget_Implementation()
+{
+	ensureMsgf(IsLocalController() == true, TEXT("APC_Player::ClientConstructHUDWidget_Implementation() - Still isn't a local player controller..."));
+	if (IsLocalController())
+	{
+		ConstructHUDWidget();
+	}
+}
+void APC_Player::ClientDestroyHUDWidget_Implementation()
+{
+	UpdateHUD = false;
+	DestroyHUDWidget();
+}
 
 #pragma endregion
-
-
-
-
-
-
-
-
-
-
-
-
 
 

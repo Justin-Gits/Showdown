@@ -27,7 +27,7 @@ protected:
 public:
 	UFUNCTION()
 	const void SetGMSpawnZoneTimeInterval();
-	
+
 	UFUNCTION()
 	void BeginSpawnTimers();
 
@@ -36,6 +36,9 @@ public:
 
 	UFUNCTION()
 	void DebugSpawnArrayPrintout();
+
+	UFUNCTION()
+	ACHAR_Player* GetSnapshotSpawn();
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Properties")
@@ -44,6 +47,7 @@ protected:
 	UFUNCTION()
 	void AddToSnapshotArray(ACHAR_Player* NewSnapshot);
 
+	ACHAR_Player* LatestSnapshot;
 	AGS_TimeArena* GS_Reference;
 	AGM_TimeArena* GM_Reference;
 	APC_Player* PC_Reference;
@@ -62,4 +66,15 @@ private:
 
 #pragma endregion
 
+
+#pragma region RPCs
+	//Snapshot Spawn
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerGetSnapshotSpawn(ACHAR_Player* TargetSnapshot);
+
+	UFUNCTION(Client, Reliable)
+	void ClientGetSnapshotSpawn(const TArray<ACHAR_Player*>& ServerCharacterArray);
+
+
+#pragma endregion
 };

@@ -61,10 +61,10 @@ UPROPERTY()
 	TArray<APC_Player*> TeamBravoPlayerControllers;
 #pragma endregion
 
-#pragma region Character Destruction
-
-public:
-
+#pragma region Character Possession
+public: 
+	UFUNCTION()
+	void PossessCharacterUsingPlayer(ACHAR_Player* TargetCharacter, APC_Player* TargetController);
 
 #pragma endregion
 
