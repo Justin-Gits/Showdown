@@ -35,7 +35,27 @@ void APS_Player::BeginSpawnTimers()
 		{
 			PSSpawnZoneTimeInterval = GMSpawnZoneTimeInterval;
 		}
-		GetWorld()->GetTimerManager().SetTimer(SnapshotSpawnTimerHandle, this, &APS_Player::CreateSnapshotSpawn, PSSpawnZoneTimeInterval, false);
+		CreateSnapshotSpawn();
+	}
+	
+}
+
+void APS_Player::CreateSnapshotSpawn()
+{
+	if (HasAuthority() && RespawnAllowed == true)
+	{
+		PC_Reference = Cast<APC_Player>(GetPlayerController());
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::CreateSnapshotSpawn() - Created Snapshot Spawn"));
+		GM_Reference->RequestSnapshotSpawn(PC_Reference);
+
+		if (GMEnableSnapshotSpawns == true)
+		{
+			GetWorld()->GetTimerManager().SetTimer(SnapshotSpawnTimerHandle, this, &APS_Player::CreateSnapshotSpawn, PSSpawnZoneTimeInterval, false);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("APS_Player::CreateSnapshotSpawn() - Further Snapshot Spawns Disabled, Check EnableSnapshotSpawns parameter in UE UI"));
+		}
 	}
 	
 }
@@ -65,6 +85,9 @@ ACHAR_Player* APS_Player::GetSnapshotSpawn()
 		if (SnapshotCharacterArray.Num() <= 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("APS_Player::GetSnapshotSpawn - No Spawns Available, You Lose :("));
+			RespawnAllowed = false;
+			StopSnapshotTimer();
+			ClientStopSnapshotTimer();
 			return nullptr;
 		}
 		else
@@ -79,6 +102,8 @@ ACHAR_Player* APS_Player::GetSnapshotSpawn()
 		if (SnapshotCharacterArray.Num() <= 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("APS_Player::GetSnapshotSpawn - No Spawns Available, You Lose :("));
+			StopSnapshotTimer();
+			ServerStopSnapshotTimer();
 			return nullptr;
 		}
 		else
@@ -88,6 +113,16 @@ ACHAR_Player* APS_Player::GetSnapshotSpawn()
 			return LatestSnapshot;
 		}
 	}
+}
+
+void APS_Player::RequestRestartSnapshotTimer()
+{
+	ExecuteRestartSnapshotTimer();
+}
+
+void APS_Player::RequestStopSnapshotTimer()
+{
+	StopSnapshotTimer();
 }
 
 void APS_Player::AddToSnapshotArray(ACHAR_Player* NewSnapshot)
@@ -117,22 +152,45 @@ const void APS_Player::SetGMSpawnZoneTimeInterval()
 	GMEnableSnapshotSpawns = GM_Reference->GetEnableSnapshotSpawns();
 }
 
-void APS_Player::CreateSnapshotSpawn()
+
+
+//If a character perishes before creating a new snapshot, restart the "create a snapshot" timer. 
+void APS_Player::ExecuteRestartSnapshotTimer()
 {
-	if (HasAuthority())
+	GetWorld()->GetTimerManager().ClearTimer(SnapshotSpawnTimerHandle);
+	GetWorld()->GetTimerManager().SetTimer(SnapshotSpawnTimerHandle, this, &APS_Player::CreateSnapshotSpawn, PSSpawnZoneTimeInterval, false);
+}
+
+void APS_Player::StopSnapshotTimer()
+{
+	if (GetWorldTimerManager().IsTimerActive(SnapshotSpawnTimerHandle))
 	{
-		PC_Reference = Cast<APC_Player>(GetPlayerController());
-		UE_LOG(LogTemp, Warning, TEXT("APS_Player::CreateSnapshotSpawn() - Created Snapshot Spawn"));
-		GM_Reference->RequestSnapshotSpawn(PC_Reference);
-	}
-	if (GMEnableSnapshotSpawns == true)
-	{
-		GetWorld()->GetTimerManager().SetTimer(SnapshotSpawnTimerHandle, this, &APS_Player::CreateSnapshotSpawn, PSSpawnZoneTimeInterval, false);
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::StopSnapshotTimer() - Timer Handle was active, now stopping."));
+		GetWorld()->GetTimerManager().ClearTimer(SnapshotSpawnTimerHandle);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("APS_Player::CreateSnapshotSpawn() - Further Snapshot Spawns Disabled, Check EnableSnapshotSpawns parameter in UE UI"));
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::StopSnapshotTimer() - Timer Handle was not active, failing silently."));
 	}
+
+}
+
+void APS_Player::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APS_Player, RespawnAllowed);
+}
+
+void APS_Player::ServerStopSnapshotTimer_Implementation()
+{
+	RespawnAllowed = false;
+	StopSnapshotTimer();
+}
+
+void APS_Player::ClientStopSnapshotTimer_Implementation()
+{
+	StopSnapshotTimer();
 }
 
 void APS_Player::ServerGetSnapshotSpawn_Implementation(ACHAR_Player* TargetSnapshot)

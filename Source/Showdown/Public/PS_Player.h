@@ -39,11 +39,20 @@ public:
 
 	UFUNCTION()
 	ACHAR_Player* GetSnapshotSpawn();
+
+	UFUNCTION()
+	void RequestRestartSnapshotTimer();
+
+	UFUNCTION()
+	void RequestStopSnapshotTimer();
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Properties")
 	TArray<ACHAR_Player*> SnapshotCharacterArray;
 	
+	UPROPERTY(Replicated)
+	bool RespawnAllowed = true;
+
 	UFUNCTION()
 	void AddToSnapshotArray(ACHAR_Player* NewSnapshot);
 
@@ -56,10 +65,14 @@ protected:
 	float PSSpawnZoneTimeInterval;
 	int SpawnZoneCount;
 	
-
-	
 	UFUNCTION()
 	void CreateSnapshotSpawn();
+
+	UFUNCTION()
+	void ExecuteRestartSnapshotTimer();
+
+	UFUNCTION()
+	void StopSnapshotTimer();
 
 private:
 	FTimerHandle SnapshotSpawnTimerHandle;
@@ -67,13 +80,22 @@ private:
 #pragma endregion
 
 
-#pragma region RPCs
+#pragma region RPCs and Replication
 	//Snapshot Spawn
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerGetSnapshotSpawn(ACHAR_Player* TargetSnapshot);
 
 	UFUNCTION(Client, Reliable)
 	void ClientGetSnapshotSpawn(const TArray<ACHAR_Player*>& ServerCharacterArray);
+
+	UFUNCTION(Server, Reliable)
+	void ServerStopSnapshotTimer();
+
+	UFUNCTION(Client, Reliable)
+	void ClientStopSnapshotTimer();
 
 
 #pragma endregion

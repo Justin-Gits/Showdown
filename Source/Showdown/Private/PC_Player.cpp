@@ -120,6 +120,7 @@ void APC_Player::DestroyPossessedCharacter(ACHAR_Player* TargetCharacter)
 {
 	UnPossess();
 	TargetCharacter->Destroy();
+	ReferencePlayerState->RequestRestartSnapshotTimer();
 }
 
 
