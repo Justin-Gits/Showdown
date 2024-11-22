@@ -22,7 +22,9 @@ void APS_Player::Tick(float DeltaTime)
 }
 
 #pragma region Snapshot Spawn
-void APS_Player::BeginSpawnTimers()
+
+//Checks for spawn zone time interval defined in Game Mode.  If the number is too low, sets the value to default. 
+void APS_Player::PreSnapshotSetup()
 {
 	if (HasAuthority())
 	{
@@ -35,40 +37,41 @@ void APS_Player::BeginSpawnTimers()
 		{
 			PSSpawnZoneTimeInterval = GMSpawnZoneTimeInterval;
 		}
-		CreateSnapshotSpawn();
+		RequestSnapshotSpawn();
 	}
 	
 }
 
-void APS_Player::CreateSnapshotSpawn()
+//Sends request to Game mode to create a snapshot spawn, triggers timer to create another request. 
+void APS_Player::RequestSnapshotSpawn()
 {
 	if (HasAuthority() && RespawnAllowed == true)
 	{
+		GM_Reference = Cast<AGM_TimeArena>(GetWorld()->GetAuthGameMode());
 		PC_Reference = Cast<APC_Player>(GetPlayerController());
-		UE_LOG(LogTemp, Warning, TEXT("APS_Player::CreateSnapshotSpawn() - Created Snapshot Spawn"));
-		GM_Reference->RequestSnapshotSpawn(PC_Reference);
+		GM_Reference->CreateSnapshotSpawnPoint(PC_Reference);
 
 		if (GMEnableSnapshotSpawns == true)
 		{
-			GetWorld()->GetTimerManager().SetTimer(SnapshotSpawnTimerHandle, this, &APS_Player::CreateSnapshotSpawn, PSSpawnZoneTimeInterval, false);
+			GetWorld()->GetTimerManager().SetTimer(SnapshotSpawnTimerHandle, this, &APS_Player::RequestSnapshotSpawn, PSSpawnZoneTimeInterval, false);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("APS_Player::CreateSnapshotSpawn() - Further Snapshot Spawns Disabled, Check EnableSnapshotSpawns parameter in UE UI"));
+			UE_LOG(LogTemp, Warning, TEXT("APS_Player::RequestSnapshotSpawn() - Further Snapshot Spawns Disabled, Check EnableSnapshotSpawns parameter in UE UI"));
 		}
 	}
 	
 }
 
-void APS_Player::RequestAddToSnapshotArray(ACHAR_Player* NewSnapshot)
+void APS_Player::AddToSnapshotArray(ACHAR_Player* NewSnapshot)
 {
 	if (HasAuthority())
 	{
-		AddToSnapshotArray(NewSnapshot);
+		InternalAddToSnapshotArray(NewSnapshot);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("APS_Player::RequestAddToSnapshotArray - Insufficient Priveleges"));
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::AddToSnapshotArray - Insufficient Priveleges"));
 	}
 }
 
@@ -87,7 +90,6 @@ ACHAR_Player* APS_Player::GetSnapshotSpawn()
 			UE_LOG(LogTemp, Warning, TEXT("APS_Player::GetSnapshotSpawn - No Spawns Available, You Lose :("));
 			RespawnAllowed = false;
 			StopSnapshotTimer();
-			ClientStopSnapshotTimer();
 			return nullptr;
 		}
 		else
@@ -99,10 +101,13 @@ ACHAR_Player* APS_Player::GetSnapshotSpawn()
 	}
 	else
 	{
-		if (SnapshotCharacterArray.Num() <= 0)
+		//Removed the logic below.  It was intended to improve client side response time, but I think i set it up incorrectly. 
+		
+		/*
+			if (SnapshotCharacterArray.Num() <= 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("APS_Player::GetSnapshotSpawn - No Spawns Available, You Lose :("));
-			StopSnapshotTimer();
+			//StopSnapshotTimer();
 			ServerStopSnapshotTimer();
 			return nullptr;
 		}
@@ -112,36 +117,37 @@ ACHAR_Player* APS_Player::GetSnapshotSpawn()
 			ServerGetSnapshotSpawn(LatestSnapshot);
 			return LatestSnapshot;
 		}
+		*/
+		return nullptr;
 	}
 }
 
 void APS_Player::RequestRestartSnapshotTimer()
 {
-	ExecuteRestartSnapshotTimer();
+	if (HasAuthority())
+	{
+		ExecuteRestartSnapshotTimer();
+	}
+	
 }
 
-void APS_Player::RequestStopSnapshotTimer()
-{
-	StopSnapshotTimer();
-}
-
-void APS_Player::AddToSnapshotArray(ACHAR_Player* NewSnapshot)
+void APS_Player::InternalAddToSnapshotArray(ACHAR_Player* NewSnapshot)
 {
 	if (HasAuthority())
 	{
 		SnapshotCharacterArray.Add(NewSnapshot);
-		UE_LOG(LogTemp, Warning, TEXT("APS_Player::AddToSnapshotArray - Added Snapshot: %s"), *NewSnapshot->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::InternalAddToSnapshotArray - Added Snapshot: %s"), *NewSnapshot->GetName());
 		//Debug, name out snapshots
 		int PrintingLength = SnapshotCharacterArray.Num();
 		for (int i = 0; i < PrintingLength; i++)
 		{
 			FString SnapshotName = NewSnapshot->GetName();
-			UE_LOG(LogTemp, Warning, TEXT("APS_Player:: AddToSnapshotArray: entry %d = %s"), i, *SnapshotName);
+			UE_LOG(LogTemp, Warning, TEXT("APS_Player:: InternalAddToSnapshotArray: entry %d = %s"), i, *SnapshotName);
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("APS_Player::AddToSnapshotArray - Lacked Authority to add snapshot"));
+		UE_LOG(LogTemp, Warning, TEXT("APS_Player::InternalAddToSnapshotArray - Lacked Authority to add snapshot"));
 	}
 }
 
@@ -157,22 +163,27 @@ const void APS_Player::SetGMSpawnZoneTimeInterval()
 //If a character perishes before creating a new snapshot, restart the "create a snapshot" timer. 
 void APS_Player::ExecuteRestartSnapshotTimer()
 {
-	GetWorld()->GetTimerManager().ClearTimer(SnapshotSpawnTimerHandle);
-	GetWorld()->GetTimerManager().SetTimer(SnapshotSpawnTimerHandle, this, &APS_Player::CreateSnapshotSpawn, PSSpawnZoneTimeInterval, false);
+	if (HasAuthority())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(SnapshotSpawnTimerHandle);
+		GetWorld()->GetTimerManager().SetTimer(SnapshotSpawnTimerHandle, this, &APS_Player::RequestSnapshotSpawn, PSSpawnZoneTimeInterval, false);
+	}
 }
 
 void APS_Player::StopSnapshotTimer()
 {
-	if (GetWorldTimerManager().IsTimerActive(SnapshotSpawnTimerHandle))
+	if (HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("APS_Player::StopSnapshotTimer() - Timer Handle was active, now stopping."));
-		GetWorld()->GetTimerManager().ClearTimer(SnapshotSpawnTimerHandle);
+		if (GetWorldTimerManager().IsTimerActive(SnapshotSpawnTimerHandle))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("APS_Player::StopSnapshotTimer() - Timer Handle was active, now stopping."));
+			GetWorld()->GetTimerManager().ClearTimer(SnapshotSpawnTimerHandle);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("APS_Player::StopSnapshotTimer() - Timer Handle was not active, failing silently."));
+		}
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("APS_Player::StopSnapshotTimer() - Timer Handle was not active, failing silently."));
-	}
-
 }
 
 void APS_Player::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -185,11 +196,6 @@ void APS_Player::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 void APS_Player::ServerStopSnapshotTimer_Implementation()
 {
 	RespawnAllowed = false;
-	StopSnapshotTimer();
-}
-
-void APS_Player::ClientStopSnapshotTimer_Implementation()
-{
 	StopSnapshotTimer();
 }
 

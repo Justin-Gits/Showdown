@@ -29,10 +29,10 @@ public:
 	const void SetGMSpawnZoneTimeInterval();
 
 	UFUNCTION()
-	void BeginSpawnTimers();
+	void PreSnapshotSetup();
 
 	UFUNCTION()
-	void RequestAddToSnapshotArray(ACHAR_Player* NewSnapshot);
+	void AddToSnapshotArray(ACHAR_Player* NewSnapshot);
 
 	UFUNCTION()
 	void DebugSpawnArrayPrintout();
@@ -42,9 +42,6 @@ public:
 
 	UFUNCTION()
 	void RequestRestartSnapshotTimer();
-
-	UFUNCTION()
-	void RequestStopSnapshotTimer();
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Properties")
@@ -54,7 +51,7 @@ protected:
 	bool RespawnAllowed = true;
 
 	UFUNCTION()
-	void AddToSnapshotArray(ACHAR_Player* NewSnapshot);
+	void InternalAddToSnapshotArray(ACHAR_Player* NewSnapshot);
 
 	ACHAR_Player* LatestSnapshot;
 	AGS_TimeArena* GS_Reference;
@@ -66,7 +63,7 @@ protected:
 	int SpawnZoneCount;
 	
 	UFUNCTION()
-	void CreateSnapshotSpawn();
+	void RequestSnapshotSpawn();
 
 	UFUNCTION()
 	void ExecuteRestartSnapshotTimer();
@@ -93,9 +90,6 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerStopSnapshotTimer();
-
-	UFUNCTION(Client, Reliable)
-	void ClientStopSnapshotTimer();
 
 
 #pragma endregion

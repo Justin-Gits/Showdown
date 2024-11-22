@@ -33,29 +33,32 @@ void APC_Player::BeginPlay()
 
 void APC_Player::OnPossess(APawn* InPawn)
 {
-	Super::OnPossess(InPawn);
-	UE_LOG(LogTemp, Warning, TEXT("APC_Player::OnPossess - Possession Occurred."));
-	ActiveCharacter = Cast<ACHAR_Player>(InPawn);
-	ensureMsgf(ActiveCharacter != nullptr, TEXT("APC_Player::OnPossess - Active Character = nullptr"));
-	if (GetLocalRole() == ROLE_Authority)
+	if (HasAuthority())
 	{
-		if (IsLocalController())
+		Super::OnPossess(InPawn);
+		UE_LOG(LogTemp, Warning, TEXT("APC_Player::OnPossess - Possession Occurred."));
+		ActiveCharacter = Cast<ACHAR_Player>(InPawn);
+		ensureMsgf(ActiveCharacter != nullptr, TEXT("APC_Player::OnPossess - Active Character = nullptr"));
+		if (GetLocalRole() == ROLE_Authority)
 		{
-			ConstructHUDWidget();
-		}
-		else
-		{
-			ClientConstructHUDWidget();
+			if (IsLocalController())
+			{
+				ConstructHUDWidget();
+			}
+			else
+			{
+				ClientConstructHUDWidget();
+			}
 		}
 	}
 }
 
 void APC_Player::OnUnPossess()
 {
-	Super::OnUnPossess();
-	//ServerRequestSpawnCharacter();
-	if (GetLocalRole() == ROLE_Authority)
+	if (HasAuthority())
 	{
+		Super::OnUnPossess();
+		//ServerRequestSpawnCharacter();
 		if (IsLocalController())
 		{
 			UpdateHUD = false;
@@ -67,6 +70,7 @@ void APC_Player::OnUnPossess()
 		{
 			UpdateHUD = false;
 			ClientDestroyHUDWidget();
+			RequestSearchForSnapshot();
 			//Need to update with client side logic once we get host logic to work. 
 		}
 
@@ -75,52 +79,56 @@ void APC_Player::OnUnPossess()
 
 void APC_Player::RequestSearchForSnapshot()
 {
-	UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestSearchForSnapshot - Executing."));
-	if (IsLocalController())
+	if (HasAuthority())
 	{
-		//ServerRequestSpawnCharacter();
-
-		if (HasAuthority())
-		{
-			ExecuteSearchForSnapshot();
-		}
-		else
-		{
-			ServerRequestSearchForSnapshot();
-		}
+		UE_LOG(LogTemp, Warning, TEXT("APC_Player::RequestSearchForSnapshot - Executing."));
+		ExecuteSearchForSnapshot();
 	}
-	//If it isn't a local controller, then do nothing. 
 }
 
 void APC_Player::ExecuteSearchForSnapshot()
 {
-	UE_LOG(LogTemp, Warning, TEXT("APC_Player::ExecuteSearchForSnapshot - Executing."));
-	ReferencePlayerState = GetPlayerState<APS_Player>();
-	ACHAR_Player* NextSpawn = ReferencePlayerState->GetSnapshotSpawn();
-	if (NextSpawn == nullptr)
+	if (HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("APC_Player::ExecuteSearchForSnapshot - NextSpawn = nullptr!"));
-	}
-	else
-	{
-		FString NextSpawnName = NextSpawn->GetName();
-		UE_LOG(LogTemp, Warning, TEXT("Next Spawn Name: %s"), *NextSpawnName);
-		UpdateHUD = true;
-		if (GetPawn())
+		UE_LOG(LogTemp, Warning, TEXT("APC_Player::ExecuteSearchForSnapshot - Executing."));
+		ReferencePlayerState = GetPlayerState<APS_Player>();
+		if (IsValid(ReferencePlayerState))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Player controller already possesses something else, unpossessing now!"));
-			UnPossess();
+			ACHAR_Player* NextSpawn = ReferencePlayerState->GetSnapshotSpawn();
+			if (NextSpawn == nullptr)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("APC_Player::ExecuteSearchForSnapshot - NextSpawn = nullptr!"));
+			}
+			else
+			{
+				FString NextSpawnName = NextSpawn->GetName();
+				UE_LOG(LogTemp, Warning, TEXT("Next Spawn Name: %s"), *NextSpawnName);
+				UpdateHUD = true;
+				if (GetPawn())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Player controller already possesses something else, unpossessing now!"));
+					UnPossess();
+				}
+				GameModeRef->PossessCharacterUsingPlayer(NextSpawn, this);
+			}
 		}
-		GameModeRef->PossessCharacterUsingPlayer(NextSpawn, this);
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("APC_Player::ExecuteSearchForSnapshot - Reference Player State = nullptr."));
+		}
+		
 	}
-
 }
 
 void APC_Player::DestroyPossessedCharacter(ACHAR_Player* TargetCharacter)
 {
-	UnPossess();
-	TargetCharacter->Destroy();
-	ReferencePlayerState->RequestRestartSnapshotTimer();
+	if (HasAuthority())
+	{
+		UnPossess();
+		ReferencePlayerState = GetPlayerState<APS_Player>();
+		ReferencePlayerState->RequestRestartSnapshotTimer();
+		TargetCharacter->Destroy();
+	}
 }
 
 
@@ -128,7 +136,7 @@ void APC_Player::DestroyPossessedCharacter(ACHAR_Player* TargetCharacter)
 void APC_Player::DelayedEIBinding()
 {
 	ULocalPlayer* LocalPlayer = GetLocalPlayer();
-	if (LocalPlayer && IsLocalPlayerController())						// TODO:  I also checked to make sure that the player is a LocalPlayerController prior to performing the enhanced input bindings to ensure that they don't get binded twice.  However, this may be an error so if i'm getting issues with it this is the place to start looking. 
+	if (LocalPlayer && IsLocalPlayerController())						
 	{
 		PlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
 		ensureMsgf(PlayerSubsystem != nullptr, TEXT("APC_Player::DelayedEIBinding - Returned nullptr for the local subsystem"));

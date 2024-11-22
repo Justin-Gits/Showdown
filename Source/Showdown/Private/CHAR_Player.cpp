@@ -78,7 +78,7 @@ void ACHAR_Player::OnHealthUpdate()
 		//Host - Everything needs to happen (HUD Update + Character update)
 		if (ReferencePlayer->GetLocalRole() == ROLE_Authority)
 		{
-			//Everything needs to happen. The HUD needs to be updated and the character needs to take damage.
+			//The HUD needs to be updated and the character needs to take damage.
 			ReferencePlayer->SetHealthBarPercentage();
 			if (CurrentHealth <= 0.0f)
 			{

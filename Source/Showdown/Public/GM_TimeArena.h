@@ -72,14 +72,14 @@ public:
 #pragma region Snapshot Spawn
 public:
 	UFUNCTION()
-	void RequestSnapshotSpawn(APC_Player* PlayerReference);
+	void CreateSnapshotSpawnPoint(APC_Player* PlayerReference);
 
 	UFUNCTION()
 	bool GetEnableSnapshotSpawns() { return EnableSnapshotSpawns; }
 
 protected:
 	UFUNCTION()
-	void CreateSnapshotSpawnPoint(APC_Player* PlayerReference);
+	void InternalCreateSnapshotSpawnPoint(APC_Player* PlayerReference);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Game Properties")
 	TSubclassOf<ACHAR_Player> SnapshotSpawnBPClass;

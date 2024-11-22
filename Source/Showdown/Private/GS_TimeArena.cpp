@@ -44,7 +44,7 @@ void AGS_TimeArena::GameStart(float SpawnTime)
 	{
 		APS_Player* CurrentPlayerState = PlayerControllerList[i]->GetPlayerState<APS_Player>();
 		CurrentPlayerState->SetGMSpawnZoneTimeInterval();
-		CurrentPlayerState->BeginSpawnTimers();
+		CurrentPlayerState->PreSnapshotSetup();
 	}
 
 

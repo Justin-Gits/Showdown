@@ -77,12 +77,15 @@ void AGM_TimeArena::PossessCharacterUsingPlayer(ACHAR_Player* TargetCharacter, A
 	TargetController->Possess(TargetCharacter);
 	UE_LOG(LogTemp, Warning, TEXT("AGM_TimeArena::PossessCharacterUsingPlayer - Executed"));
 }
-void AGM_TimeArena::RequestSnapshotSpawn(APC_Player* PlayerReference)
-{
-	CreateSnapshotSpawnPoint(PlayerReference);
-}
-//Create a snapshot spawn point based on the player's current position
+
+//Calls protected InternalCreateSnapshotSpawnPoint
 void AGM_TimeArena::CreateSnapshotSpawnPoint(APC_Player* PlayerReference)
+{
+	InternalCreateSnapshotSpawnPoint(PlayerReference);
+}
+
+//Create a snapshot spawn point based on the player's current position
+void AGM_TimeArena::InternalCreateSnapshotSpawnPoint(APC_Player* PlayerReference)
 {
 	UWorld* const World_Reference = GetWorld();
 	if (World_Reference != nullptr)
@@ -119,9 +122,8 @@ void AGM_TimeArena::CreateSnapshotSpawnPoint(APC_Player* PlayerReference)
 		SnapshotSpawn->RequestSetAdditionalSpawnParameters(SnapshotSpawnVelocity, SnapshotSpawnHealth, SnapshotSpawnAmmo);
 
 		//Add Snapshot to Player State Array
-		PlayerStateReference->RequestAddToSnapshotArray(SnapshotSpawn);
-		PlayerStateReference->DebugSpawnArrayPrintout();
-		// TODO:  I need to start tracking the player spawns in some sort of array. 
+		PlayerStateReference->AddToSnapshotArray(SnapshotSpawn);
+		PlayerStateReference->DebugSpawnArrayPrintout(); 
 
 
 	}
